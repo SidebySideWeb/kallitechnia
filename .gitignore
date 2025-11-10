@@ -1,0 +1,17 @@
+node_modules
+.next
+.turbo
+.env
+.env.*
+pnpm-debug.log
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+dist
+out
+.DS_Store
+Thumbs.db
+coverage
+*.local
+*.lock
+
