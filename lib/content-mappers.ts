@@ -193,12 +193,8 @@ const resolveMediaUrl = (value: unknown, fallback?: string): string => {
       }
     }
 
-    if (typeof record.id === 'string' || typeof record.id === 'number') {
-      // Relationship populated only with an id; fall back for now
-      if (fallback) {
-        return getAbsoluteMediaUrl(fallback)
-      }
-      return ''
+    if ('id' in record && (typeof record.id === 'string' || typeof record.id === 'number')) {
+      return fallback ? getAbsoluteMediaUrl(fallback) : ''
     }
   }
 
