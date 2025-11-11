@@ -10,7 +10,7 @@ export default async function TermsPage() {
   const client = await createKalitechniaClient(hostname)
 
   const [page, footerData] = await Promise.all([
-    fetchPageContent(client, "kalitechnia-terms", 2),
+    fetchPageContent(client, "kallitechnia-terms", 2),
     fetchFooterData(client),
   ])
 

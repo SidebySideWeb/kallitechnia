@@ -24,7 +24,7 @@ export default async function MediaPage() {
   const hostname = headersList.get("host") ?? undefined
   const client = await createKalitechniaClient(hostname)
 
-  const [page, footerData] = await Promise.all([fetchPageContent(client, "kalitechnia-media", 2), fetchFooterData(client)])
+  const [page, footerData] = await Promise.all([fetchPageContent(client, "kallitechnia-media", 2), fetchFooterData(client)])
 
   const content = extractSections(page)
   const data = mapKalitechniaMedia(content)

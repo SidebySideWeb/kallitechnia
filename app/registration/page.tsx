@@ -33,7 +33,7 @@ export default async function RegistrationPage() {
   const client = await createKalitechniaClient(hostname)
 
   const [page, footerData] = await Promise.all([
-    fetchPageContent(client, "kalitechnia-registration", 2),
+    fetchPageContent(client, "kallitechnia-registration", 2),
     fetchFooterData(client),
   ])
 

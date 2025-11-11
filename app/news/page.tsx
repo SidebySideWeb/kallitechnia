@@ -15,7 +15,7 @@ export default async function NewsPage() {
   const client = await createKalitechniaClient(hostname)
 
   const [page, footerData, postsResponse] = await Promise.all([
-    fetchPageContent(client, "kalitechnia-news", 2),
+    fetchPageContent(client, "kallitechnia-news", 2),
     fetchFooterData(client),
     fetchPosts(client, {
       limit: 36,

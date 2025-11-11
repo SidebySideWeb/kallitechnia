@@ -5,7 +5,7 @@
 ```
 NEXT_PUBLIC_PAYLOAD_URL=<public URL του Payload>
 PAYLOAD_URL=<ίδιο URL για server-side usage>
-NEXT_PUBLIC_TENANT_SLUG=kalitechnia
+NEXT_PUBLIC_TENANT_SLUG=kallitechnia
 ```
 
 Στο τοπικό περιβάλλον, αν τρέχει το Payload στην προεπιλεγμένη θύρα:
@@ -13,8 +13,8 @@ NEXT_PUBLIC_TENANT_SLUG=kalitechnia
 ```
 NEXT_PUBLIC_PAYLOAD_URL=http://localhost:3000
 PAYLOAD_URL=http://localhost:3000
-NEXT_PUBLIC_TENANT_SLUG=kalitechnia
+NEXT_PUBLIC_TENANT_SLUG=kallitechnia
 ```
 
-> Το `NEXT_PUBLIC_TENANT_SLUG` επιτρέπει στην εφαρμογή να κάνει fallback στο σωστό tenant όταν τρέχει σε localhost. Σε παραγωγή, το tenant ανιχνεύεται αυτόματα από το domain (`kalitechnia.gr`, `www.kalitechnia.gr`, `kalitechnia.vercel.app`).*** End Patch
+> Το `NEXT_PUBLIC_TENANT_SLUG` επιτρέπει στην εφαρμογή να κάνει fallback στο σωστό tenant όταν τρέχει σε localhost. Σε παραγωγή, το tenant ανιχνεύεται αυτόματα από το domain (`kallitechnia.gr`, `www.kallitechnia.gr`, `kallitechnia.vercel.app`).
 

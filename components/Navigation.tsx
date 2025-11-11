@@ -31,7 +31,7 @@ export default function Navigation({ data = defaultHeaderData }: NavigationProps
             {data.logo_image ? (
               <Image
                 src={data.logo_image}
-                alt={data.logo_text ?? 'Kalitechnia'}
+                alt={data.logo_text ?? 'Kallitechnia'}
                 width={180}
                 height={60}
                 priority

@@ -21,7 +21,7 @@ export default async function Page() {
     const canFetchPayload = Boolean(process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL)
     if (canFetchPayload) {
       const client = createClientWithTenant(hostname)
-      const homepage = await client.getPageBySlug('kalitechnia-homepage', {
+      const homepage = await client.getPageBySlug('kallitechnia-homepage', {
         params: {
           depth: 1,
         },
@@ -31,7 +31,7 @@ export default async function Page() {
         const content = extractContent(homepage)
         homepageData = mapKalitechniaHomepage(content)
 
-        const headerFooterSlug = homepageData.headerFooterPageSlug || 'header-footer-kalitechnia'
+        const headerFooterSlug = homepageData.headerFooterPageSlug || 'header-footer-kallitechnia'
         const headerFooterPage = await client.getPageBySlug(headerFooterSlug, {
           params: {
             depth: 0,
@@ -45,7 +45,7 @@ export default async function Page() {
       }
     }
   } catch (error) {
-    console.error('[Kalitechnia Home] Failed to load content from Payload:', error)
+    console.error('[Kallitechnia Home] Failed to load content from Payload:', error)
   }
 
   return (

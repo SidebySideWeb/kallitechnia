@@ -1,3 +1,4 @@
+import { getAbsoluteMediaUrl } from '@/lib/payload-client'
 import { richTextToPlainText } from '@/lib/richText'
 
 export interface NavigationItem {
@@ -52,7 +53,7 @@ export interface FooterData {
 }
 
 export const defaultHeaderData: HeaderData = {
-  logo_text: 'kalitechnia.gr',
+  logo_text: 'kallitechnia.gr',
   logo_image:
     'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Logo%20KGK%20%CF%85%CF%88%CE%B7%CE%BB%CE%AE%CF%82%20%CE%B1%CE%BD%CE%AC%CE%BB%CF%85%CF%83%CE%B7%CF%82-YP2dWdAD9HKxgCBQOBLccXnxTydRcQ.png',
   menu: [
@@ -78,7 +79,7 @@ export const defaultFooterData: FooterData = {
   },
   contact: {
     title: 'Επικοινωνία',
-    email: 'info@kalitechnia.gr',
+    email: 'info@kallitechnia.gr',
     phone: '+30 26710 00000',
     address: 'Αργοστόλι, Κεφαλονιά',
   },
@@ -137,6 +138,77 @@ const asString = (value: unknown, fallback = ''): string => (typeof value === 's
 
 const asStringOrUndefined = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined)
 
+const isMediaObject = (value: unknown): value is {
+  url?: string
+  thumbnailURL?: string
+  image?: string
+  imageUrl?: string
+  sizes?: Record<string, { url?: string }>
+} =>
+  typeof value === 'object' &&
+  value !== null &&
+  ('url' in (value as Record<string, unknown>) ||
+    'thumbnailURL' in (value as Record<string, unknown>) ||
+    'image' in (value as Record<string, unknown>) ||
+    'imageUrl' in (value as Record<string, unknown>) ||
+    'sizes' in (value as Record<string, unknown>))
+
+const extractUrlFromMedia = (value: Record<string, any>): string | undefined => {
+  if (typeof value.url === 'string') return value.url
+  if (typeof value.image === 'string') return value.image
+  if (typeof value.imageUrl === 'string') return value.imageUrl
+  if (typeof value.thumbnailURL === 'string') return value.thumbnailURL
+
+  if (value.sizes && typeof value.sizes === 'object') {
+    for (const size of Object.values(value.sizes as Record<string, any>)) {
+      if (size && typeof size.url === 'string') {
+        return size.url
+      }
+    }
+  }
+
+  return undefined
+}
+
+const resolveMediaUrl = (value: unknown, fallback?: string): string => {
+  if (typeof value === 'string' && value.length > 0) {
+    return getAbsoluteMediaUrl(value)
+  }
+
+  if (Array.isArray(value) && value.length > 0) {
+    return resolveMediaUrl(value[0], fallback)
+  }
+
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+
+    if (record.value !== undefined) {
+      return resolveMediaUrl(record.value, fallback)
+    }
+
+    if (isMediaObject(record)) {
+      const extracted = extractUrlFromMedia(record as Record<string, any>)
+      if (extracted) {
+        return getAbsoluteMediaUrl(extracted)
+      }
+    }
+
+    if (typeof record.id === 'string' || typeof record.id === 'number') {
+      // Relationship populated only with an id; fall back for now
+      if (fallback) {
+        return getAbsoluteMediaUrl(fallback)
+      }
+      return ''
+    }
+  }
+
+  if (fallback) {
+    return getAbsoluteMediaUrl(fallback)
+  }
+
+  return ''
+}
+
 export function mapHeaderContent(content: unknown): HeaderData {
   if (!isRecord(content)) {
     return defaultHeaderData
@@ -157,7 +229,7 @@ export function mapHeaderContent(content: unknown): HeaderData {
 
   return {
     logo_text: asString(content.logoText ?? content.logo_text, defaultHeaderData.logo_text),
-    logo_image: asStringOrUndefined(content.logo_image ?? content.logoImage ?? defaultHeaderData.logo_image),
+    logo_image: resolveMediaUrl(content.logo_image ?? content.logoImage, defaultHeaderData.logo_image),
     menu,
     cta: {
       label: asString(
@@ -208,7 +280,7 @@ export function mapFooterContent(content: unknown): FooterData {
       name: asString(brand.name, defaultFooterData.brand.name),
       tagline: asStringOrUndefined(brand.tagline) ?? defaultFooterData.brand.tagline,
       description: asStringOrUndefined(brand.description) ?? defaultFooterData.brand.description,
-      logo_image: asStringOrUndefined(brand.logo_image ?? brand.logoImage) ?? defaultFooterData.brand.logo_image,
+      logo_image: resolveMediaUrl(brand.logo_image ?? brand.logoImage, defaultFooterData.brand.logo_image),
     },
     contact: {
       title: asStringOrUndefined(contact.title) ?? defaultFooterData.contact.title,
@@ -307,7 +379,7 @@ export interface KalitechniaHomepageData {
 }
 
 export const defaultHomepageData: KalitechniaHomepageData = {
-  headerFooterPageSlug: 'header-footer-kalitechnia',
+  headerFooterPageSlug: 'header-footer-kallitechnia',
   hero: {
     headline: 'Η Γυμναστική είναι δύναμη, χαρά, δημιουργία.',
     subheadline: 'Ανακαλύψτε τη μαγεία της γυμναστικής στον σύλλογό μας.',
@@ -469,7 +541,7 @@ const mapProgramItems = (items: unknown): KalitechniaProgramItem[] => {
     return {
       title: asString(item.title, fallback.title),
       description: richTextToPlainText(item.description) || fallback.description,
-      image: asString(item.image ?? item.imageUrl, fallback.image),
+      image: resolveMediaUrl(item.image ?? item.imageUrl, fallback.image),
       linkHref: asString(item.linkHref ?? item.href, fallback.linkHref),
       linkLabel: asString(item.linkLabel, fallback.linkLabel),
       anchor: asStringOrUndefined(item.anchor) ?? fallback.anchor,
@@ -489,7 +561,7 @@ const mapGalleryItems = (items: unknown): KalitechniaGalleryItem[] => {
     return {
       title: asString(item.title, fallback.title),
       caption: richTextToPlainText(captionCandidate) || asString(captionCandidate, fallback.caption ?? ''),
-      image: asString(item.image ?? item.imageUrl, fallback.image),
+      image: resolveMediaUrl(item.image ?? item.imageUrl, fallback.image),
     }
   })
 }
@@ -507,7 +579,7 @@ const mapNewsItems = (items: unknown): KalitechniaNewsItem[] => {
       summary: richTextToPlainText(item.summary) || fallback.summary,
       date: asString(item.date, fallback.date),
       href: asString(item.href ?? item.link, fallback.href),
-      image: asString(item.image ?? item.imageUrl, fallback.image),
+      image: resolveMediaUrl(item.image ?? item.imageUrl, fallback.image),
     }
   })
 }
@@ -543,7 +615,7 @@ export function mapKalitechniaHomepage(content: unknown): KalitechniaHomepageDat
       subheadline: richTextToPlainText(hero.subheadline) || defaultHomepageData.hero.subheadline,
       ctaLabel: asString(heroCtaLabel, defaultHomepageData.hero.ctaLabel),
       ctaHref: asString(heroCtaHref, defaultHomepageData.hero.ctaHref),
-      backgroundImage: asString(
+      backgroundImage: resolveMediaUrl(
         hero.backgroundImage ?? hero.image ?? hero.imageUrl,
         defaultHomepageData.hero.backgroundImage,
       ),
@@ -551,7 +623,7 @@ export function mapKalitechniaHomepage(content: unknown): KalitechniaHomepageDat
     welcome: {
       title: asString(welcome.title, defaultHomepageData.welcome.title),
       paragraphs: mapParagraphs(welcome.paragraphs ?? welcome.body ?? welcome.text),
-      image: asString(welcome.image ?? welcome.photo ?? welcome.imageUrl, defaultHomepageData.welcome.image),
+      image: resolveMediaUrl(welcome.image ?? welcome.photo ?? welcome.imageUrl, defaultHomepageData.welcome.image),
     },
     programs: {
       title: asString(programs.title, defaultHomepageData.programs.title),

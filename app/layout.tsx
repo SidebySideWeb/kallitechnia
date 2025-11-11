@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const canFetchPayload = Boolean(process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL)
     if (canFetchPayload) {
       const client = createClientWithTenant(hostname)
-      const headerFooterPage = await client.getPageBySlug('header-footer-kalitechnia', {
+      const headerFooterPage = await client.getPageBySlug('header-footer-kallitechnia', {
         params: { depth: 0 },
       })
 
@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       }
     }
   } catch (error) {
-    console.error('[Kalitechnia Layout] Failed to fetch header data:', error)
+    console.error('[Kallitechnia Layout] Failed to fetch header data:', error)
   }
 
   return (

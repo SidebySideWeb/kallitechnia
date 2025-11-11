@@ -14,7 +14,7 @@ const isValidUrl = (value: string | null | undefined): boolean => {
     new URL(value)
     return true
   } catch {
-    console.warn('[Kalitechnia] Ignoring invalid Payload URL:', value)
+    console.warn('[Kallitechnia] Ignoring invalid Payload URL:', value)
     return false
   }
 }
@@ -34,7 +34,7 @@ export async function fetchFooterData(client: PayloadApiClient): Promise<FooterD
   }
 
   try {
-    const footerPage = await client.getPageBySlug('header-footer-kalitechnia', {
+    const footerPage = await client.getPageBySlug('header-footer-kallitechnia', {
       params: { depth: 0 },
     })
 
@@ -45,7 +45,7 @@ export async function fetchFooterData(client: PayloadApiClient): Promise<FooterD
     const footer = extractFooter(footerPage)
     return mapFooterContent(footer)
   } catch (error) {
-    console.error('[Kalitechnia] Failed to fetch footer data:', error)
+    console.error('[Kallitechnia] Failed to fetch footer data:', error)
     return defaultFooterData
   }
 }

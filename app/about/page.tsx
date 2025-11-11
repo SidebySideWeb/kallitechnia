@@ -11,7 +11,7 @@ export default async function AboutPage() {
 
   const client = await createKalitechniaClient(hostname)
   const [page, footerData] = await Promise.all([
-    fetchPageContent(client, "kalitechnia-about", 2),
+    fetchPageContent(client, "kallitechnia-about", 2),
     fetchFooterData(client),
   ])
 
