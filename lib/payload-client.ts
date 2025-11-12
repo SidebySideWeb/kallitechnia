@@ -251,13 +251,6 @@ export function createPayloadClient(options: ApiClientOptions): PayloadApiClient
   return new PayloadApiClient(options)
 }
 
-export function getBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_PAYLOAD_URL || ''
-  }
-  return process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || ''
-}
-
 export function getAbsoluteMediaUrl(url: string | undefined | null): string {
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -284,6 +277,46 @@ export function getTenantFromHostname(hostname: string): string | null {
   }
 
   return domain
+}
+
+const DEFAULT_CMS_BASE_URL = 'https://cms.ftiaxesite.gr'
+
+const domainBaseUrlMap: Record<string, string> = {
+  'ftiaxesite.gr': DEFAULT_CMS_BASE_URL,
+  'www.ftiaxesite.gr': DEFAULT_CMS_BASE_URL,
+  'ftiaxesite.vercel.app': DEFAULT_CMS_BASE_URL,
+  'ftiaxesite.sidebysites.dev': DEFAULT_CMS_BASE_URL,
+  'kallitechnia.gr': DEFAULT_CMS_BASE_URL,
+  'www.kallitechnia.gr': DEFAULT_CMS_BASE_URL,
+  'kallitechnia.vercel.app': DEFAULT_CMS_BASE_URL,
+  'kalitechnia.gr': DEFAULT_CMS_BASE_URL,
+  'www.kalitechnia.gr': DEFAULT_CMS_BASE_URL,
+  'kalitechnia.vercel.app': DEFAULT_CMS_BASE_URL,
+  'kaliitechnia.gr': DEFAULT_CMS_BASE_URL,
+  'www.kaliitechnia.gr': DEFAULT_CMS_BASE_URL,
+  'kaliitechnia.vercel.app': DEFAULT_CMS_BASE_URL,
+}
+
+function resolveBaseUrl(hostname?: string): string {
+  const envBase =
+    (process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || '').replace(/\/$/, '')
+  if (envBase) {
+    return envBase
+  }
+
+  const normalizedHost = hostname?.split(':')[0].toLowerCase()
+  if (normalizedHost) {
+    const mapped = domainBaseUrlMap[normalizedHost]
+    if (mapped) {
+      return mapped
+    }
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return DEFAULT_CMS_BASE_URL
+  }
+
+  return ''
 }
 
 function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
@@ -328,7 +361,7 @@ function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
 }
 
 export function createClientWithTenant(hostname?: string, locale?: string): PayloadApiClient {
-  const baseUrl = getBaseUrl()
+  const baseUrl = resolveBaseUrl(hostname)
 
   if (!baseUrl) {
     console.warn('[Payload Client] NEXT_PUBLIC_PAYLOAD_URL is not set. CMS requests will fail.')
@@ -368,4 +401,8 @@ export function createClientWithTenant(hostname?: string, locale?: string): Payl
   }
 
   return client
+}
+
+export function getBaseUrl(): string {
+  return resolveBaseUrl()
 }
