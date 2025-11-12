@@ -1,7 +1,5 @@
 import Image from "next/image"
 import { Download, Facebook, Instagram, Youtube } from "lucide-react"
-import { headers } from "next/headers"
-
 import Footer from "@/components/Footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -20,9 +18,7 @@ const socialIcons = {
 }
 
 export default async function MediaPage() {
-  const headersList = await headers()
-  const hostname = headersList.get("host") ?? undefined
-  const client = await createKalitechniaClient(hostname)
+  const client = await createKalitechniaClient()
 
   const [page, footerData] = await Promise.all([fetchPageContent(client, "kallitechnia-media", 2), fetchFooterData(client)])
 

@@ -4,7 +4,6 @@ import { createClientWithTenant } from "@/lib/payload-client"
 import { isRecord } from "@/lib/utils"
 import type { Metadata } from "next"
 import { Nunito, Poppins } from "next/font/google"
-import { headers } from "next/headers"
 import "./globals.css"
 
 const nunito = Nunito({
@@ -27,15 +26,12 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const headersList = await headers()
-  const hostname = headersList.get('host') || ''
-
   let headerData = defaultHeaderData
 
   try {
     const canFetchPayload = Boolean(process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL)
     if (canFetchPayload) {
-      const client = createClientWithTenant(hostname)
+      const client = createClientWithTenant()
       const headerFooterPage = await client.getPageBySlug('header-footer-kallitechnia', {
         params: { depth: 0 },
       })

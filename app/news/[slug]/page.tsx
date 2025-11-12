@@ -1,7 +1,6 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { Calendar, User } from "lucide-react"
-import { headers } from "next/headers"
 
 import Footer from "@/components/Footer"
 import { mapKalitechniaNewsPost } from "@/lib/page-content"
@@ -14,9 +13,7 @@ type NewsPostPageProps = {
 export default async function NewsPostPage({ params }: NewsPostPageProps) {
   const { slug } = await params
 
-  const headersList = await headers()
-  const hostname = headersList.get("host") ?? undefined
-  const client = await createKalitechniaClient(hostname)
+  const client = await createKalitechniaClient()
 
   const [postDoc, footerData] = await Promise.all([fetchPostBySlug(client, slug), fetchFooterData(client)])
   const post = mapKalitechniaNewsPost(postDoc)

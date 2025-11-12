@@ -1,8 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Calendar } from "lucide-react"
-import { headers } from "next/headers"
-
 import Footer from "@/components/Footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { mapKalitechniaNewsList } from "@/lib/page-content"
@@ -10,9 +8,7 @@ import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageCon
 import { isRecord } from "@/lib/utils"
 
 export default async function NewsPage() {
-  const headersList = await headers()
-  const hostname = headersList.get("host") ?? undefined
-  const client = await createKalitechniaClient(hostname)
+  const client = await createKalitechniaClient()
 
   const [page, footerData, postsResponse] = await Promise.all([
     fetchPageContent(client, "kallitechnia-news", 2),

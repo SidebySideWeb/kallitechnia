@@ -8,19 +8,14 @@ import {
 } from "@/lib/content-mappers"
 import { createClientWithTenant } from "@/lib/payload-client"
 import { isRecord } from "@/lib/utils"
-import { headers } from "next/headers"
-
 export default async function Page() {
-  const headersList = await headers()
-  const hostname = headersList.get('host') || ''
-
   let homepageData = defaultHomepageData
   let footerData = defaultFooterData
 
   try {
     const canFetchPayload = Boolean(process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL)
     if (canFetchPayload) {
-      const client = createClientWithTenant(hostname)
+      const client = createClientWithTenant()
       const homepage = await client.getPageBySlug('kallitechnia-homepage', {
         params: {
           depth: 1,

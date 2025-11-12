@@ -1,15 +1,10 @@
 import Image from "next/image"
-import { headers } from "next/headers"
-
 import Footer from "@/components/Footer"
 import { mapKalitechniaAbout } from "@/lib/page-content"
 import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
 
 export default async function AboutPage() {
-  const headersList = await headers()
-  const hostname = headersList.get("host") ?? undefined
-
-  const client = await createKalitechniaClient(hostname)
+  const client = await createKalitechniaClient()
   const [page, footerData] = await Promise.all([
     fetchPageContent(client, "kallitechnia-about", 2),
     fetchFooterData(client),

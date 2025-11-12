@@ -1,13 +1,10 @@
 import Link from "next/link"
-import { headers } from "next/headers"
 
 import Footer from "@/components/Footer"
 import { createKalitechniaClient, fetchFooterData } from "@/lib/server/content"
 
 export default async function NotFound() {
-  const headersList = await headers()
-  const hostname = headersList.get("host") ?? undefined
-  const client = await createKalitechniaClient(hostname)
+  const client = await createKalitechniaClient()
   const footerData = await fetchFooterData(client)
 
   return (

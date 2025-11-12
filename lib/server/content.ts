@@ -24,8 +24,8 @@ export const hasPayloadBaseUrl = (): boolean => {
   return isValidUrl(baseUrl)
 }
 
-export async function createKalitechniaClient(hostname?: string): Promise<PayloadApiClient> {
-  return createClientWithTenant(hostname)
+export async function createKalitechniaClient(): Promise<PayloadApiClient> {
+  return createClientWithTenant()
 }
 
 export async function fetchFooterData(client: PayloadApiClient): Promise<FooterData> {

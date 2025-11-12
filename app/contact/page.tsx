@@ -1,5 +1,4 @@
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
-import { headers } from "next/headers"
 
 import Footer from "@/components/Footer"
 import { Button } from "@/components/ui/button"
@@ -21,9 +20,7 @@ const iconMap = {
 } satisfies Record<IconName, typeof MapPin>
 
 export default async function ContactPage() {
-  const headersList = await headers()
-  const hostname = headersList.get("host") ?? undefined
-  const client = await createKalitechniaClient(hostname)
+  const client = await createKalitechniaClient()
 
   const [page, footerData] = await Promise.all([
     fetchPageContent(client, "kallitechnia-contact", 2),

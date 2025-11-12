@@ -1,5 +1,4 @@
 import Image from "next/image"
-import { headers } from "next/headers"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -8,9 +7,7 @@ import { mapKalitechniaPrograms } from "@/lib/page-content"
 import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
 
 export default async function ProgramsPage() {
-  const headersList = await headers()
-  const hostname = headersList.get("host") ?? undefined
-  const client = await createKalitechniaClient(hostname)
+  const client = await createKalitechniaClient()
 
   const [page, footerData] = await Promise.all([
     fetchPageContent(client, "kallitechnia-programs", 2),

@@ -267,18 +267,6 @@ export function getAbsoluteMediaUrl(url: string | undefined | null): string {
   return url
 }
 
-export function getTenantFromHostname(hostname: string): string | null {
-  if (!hostname) return null
-
-  const domain = hostname.split(':')[0]
-
-  if (domain === 'localhost' || domain === '127.0.0.1') {
-    return process.env.NEXT_PUBLIC_TENANT_SLUG || null
-  }
-
-  return domain
-}
-
 function resolveBaseUrl(): string {
   const envBase =
     (process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || '').replace(/\/$/, '')
@@ -295,48 +283,7 @@ function resolveBaseUrl(): string {
   return ''
 }
 
-function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
-  if (!domain) return undefined
-
-  const normalized = domain.toLowerCase()
-  const domainMap: Record<string, string> = {
-    'ftiaxesite.gr': 'ftiaxesite',
-    'www.ftiaxesite.gr': 'ftiaxesite',
-    'ftiaxesite.vercel.app': 'ftiaxesite',
-    'ftiaxesite.sidebysites.dev': 'ftiaxesite',
-    'kallitechnia.gr': 'kallitechnia',
-    'www.kallitechnia.gr': 'kallitechnia',
-    'kallitechnia.vercel.app': 'kallitechnia',
-    'kalitechnia.gr': 'kallitechnia',
-    'www.kalitechnia.gr': 'kallitechnia',
-    'kalitechnia.vercel.app': 'kallitechnia',
-    'kaliitechnia.gr': 'kallitechnia',
-    'www.kaliitechnia.gr': 'kallitechnia',
-    'kaliitechnia.vercel.app': 'kallitechnia',
-    'kallitechnia.ftiaxesite.gr': 'kallitechnia',
-    'kalitechnia.ftiaxesite.gr': 'kallitechnia',
-    'kaliitechnia.ftiaxesite.gr': 'kallitechnia',
-  }
-
-  const mapped = domainMap[normalized]
-  if (mapped) return mapped
-
-  if (normalized.includes('ftiaxesite')) {
-    return 'ftiaxesite'
-  }
-
-  if (
-    normalized.includes('kallitechnia') ||
-    normalized.includes('kalitechnia') ||
-    normalized.includes('kaliitechnia')
-  ) {
-    return 'kallitechnia'
-  }
-
-  return undefined
-}
-
-export function createClientWithTenant(_hostname?: string, locale?: string): PayloadApiClient {
+export function createClientWithTenant(locale?: string): PayloadApiClient {
   const baseUrl = resolveBaseUrl()
 
   if (!baseUrl) {
