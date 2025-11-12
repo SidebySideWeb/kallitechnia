@@ -294,9 +294,19 @@ function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
     'ftiaxesite.gr': 'ftiaxesite',
     'www.ftiaxesite.gr': 'ftiaxesite',
     'ftiaxesite.vercel.app': 'ftiaxesite',
+    'ftiaxesite.sidebysites.dev': 'ftiaxesite',
     'kallitechnia.gr': 'kallitechnia',
     'www.kallitechnia.gr': 'kallitechnia',
     'kallitechnia.vercel.app': 'kallitechnia',
+    'kalitechnia.gr': 'kallitechnia',
+    'www.kalitechnia.gr': 'kallitechnia',
+    'kalitechnia.vercel.app': 'kallitechnia',
+    'kaliitechnia.gr': 'kallitechnia',
+    'www.kaliitechnia.gr': 'kallitechnia',
+    'kaliitechnia.vercel.app': 'kallitechnia',
+    'kallitechnia.ftiaxesite.gr': 'kallitechnia',
+    'kalitechnia.ftiaxesite.gr': 'kallitechnia',
+    'kaliitechnia.ftiaxesite.gr': 'kallitechnia',
   }
 
   const mapped = domainMap[normalized]
@@ -306,7 +316,11 @@ function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
     return 'ftiaxesite'
   }
 
-  if (normalized.includes('kallitechnia')) {
+  if (
+    normalized.includes('kallitechnia') ||
+    normalized.includes('kalitechnia') ||
+    normalized.includes('kaliitechnia')
+  ) {
     return 'kallitechnia'
   }
 
