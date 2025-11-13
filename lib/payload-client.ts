@@ -84,6 +84,16 @@ export class PayloadApiClient {
       })
     }
 
+    // Log every API request in production to debug
+    console.error('[Payload API Request]', {
+      url,
+      method: fetchOptions.method || 'GET',
+      tenantSlug: this.tenantSlug,
+      tenantDomain: this.tenantDomain,
+      headers: Object.fromEntries(headers.entries()),
+      params,
+    })
+
     try {
       const response = await fetch(url, {
         ...fetchOptions,
@@ -115,6 +125,22 @@ export class PayloadApiClient {
       }
 
       const json = (await response.json()) as T
+
+      // Log API response in production to debug
+      console.error('[Payload API Response]', {
+        url,
+        status: response.status,
+        tenantSlug: this.tenantSlug,
+        hasDocs: Array.isArray((json as any).docs),
+        docCount: Array.isArray((json as any).docs) ? (json as any).docs.length : 0,
+        firstDocSlug: Array.isArray((json as any).docs) && (json as any).docs.length > 0
+          ? (json as any).docs[0]?.slug
+          : null,
+        firstDocTenant: Array.isArray((json as any).docs) && (json as any).docs.length > 0
+          ? (json as any).docs[0]?.tenant
+          : null,
+      })
+
       return json
     } catch (error) {
       if (error instanceof Error) {
