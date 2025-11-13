@@ -1,6 +1,6 @@
 import Navigation from "@/components/Navigation"
 import { defaultHeaderData, mapHeaderContent } from "@/lib/content-mappers"
-import { createClientWithTenant } from "@/lib/payload-client"
+import { getApiClient } from "@/lib/api-client"
 import { isRecord } from "@/lib/utils"
 import type { Metadata } from "next"
 import { Nunito, Poppins } from "next/font/google"
@@ -31,10 +31,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   try {
     const canFetchPayload = Boolean(process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL)
     if (canFetchPayload) {
-      const client = createClientWithTenant()
-      const headerFooterPage = await client.getPageBySlug('header-footer-kallitechnia', {
-        params: { depth: 0 },
-      })
+      const client = getApiClient()
+      const headerFooterPage = await client.getPage('header-footer-kallitechnia', 0)
 
       const cmsHeader = extractHeader(headerFooterPage)
       if (cmsHeader !== undefined) {

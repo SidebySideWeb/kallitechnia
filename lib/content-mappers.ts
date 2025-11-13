@@ -1,4 +1,4 @@
-import { getAbsoluteMediaUrl } from '@/lib/payload-client'
+import { getAbsoluteMediaUrl } from '@/lib/api-client'
 import { richTextToPlainText } from '@/lib/richText'
 
 export interface NavigationItem {

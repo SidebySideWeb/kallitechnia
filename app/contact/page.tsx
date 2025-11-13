@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { mapKalitechniaContact, type ContactPageData, type IconName } from "@/lib/page-content"
-import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
+import { extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
 
 const iconMap = {
   mapPin: MapPin,
@@ -20,11 +20,9 @@ const iconMap = {
 } satisfies Record<IconName, typeof MapPin>
 
 export default async function ContactPage() {
-  const client = await createKalitechniaClient()
-
   const [page, footerData] = await Promise.all([
-    fetchPageContent(client, "kallitechnia-contact", 2),
-    fetchFooterData(client),
+    fetchPageContent("kallitechnia-contact", 2),
+    fetchFooterData(),
   ])
 
   const content = extractSections(page)

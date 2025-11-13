@@ -6,8 +6,9 @@ import {
   mapFooterContent,
   mapKalitechniaHomepage,
 } from "@/lib/content-mappers"
-import { createClientWithTenant } from "@/lib/payload-client"
+import { getApiClient } from "@/lib/api-client"
 import { isRecord } from "@/lib/utils"
+
 export default async function Page() {
   let homepageData = defaultHomepageData
   let footerData = defaultFooterData
@@ -15,23 +16,15 @@ export default async function Page() {
   try {
     const canFetchPayload = Boolean(process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL)
     if (canFetchPayload) {
-      const client = createClientWithTenant()
-      const homepage = await client.getPageBySlug('kallitechnia-homepage', {
-        params: {
-          depth: 1,
-        },
-      })
+      const client = getApiClient()
+      const homepage = await client.getPage('kallitechnia-homepage', 1)
 
       if (homepage) {
         const content = extractContent(homepage)
         homepageData = mapKalitechniaHomepage(content)
 
         const headerFooterSlug = homepageData.headerFooterPageSlug || 'header-footer-kallitechnia'
-        const headerFooterPage = await client.getPageBySlug(headerFooterSlug, {
-          params: {
-            depth: 0,
-          },
-        })
+        const headerFooterPage = await client.getPage(headerFooterSlug, 0)
 
         const footerContent = extractFooter(headerFooterPage)
         if (footerContent !== undefined) {
@@ -40,7 +33,7 @@ export default async function Page() {
       }
     }
   } catch (error) {
-    console.error('[Kallitechnia Home] Failed to load content from Payload:', error)
+    console.error('[Kallitechnia Home] Failed to load content from CMS:', error)
   }
 
   return (

@@ -1,42 +1,21 @@
+/**
+ * Server-side content fetching utilities
+ * Uses clean API client (no Payload dependencies)
+ */
+
+import { getApiClient } from '@/lib/api-client'
 import { mapFooterContent, defaultFooterData, type FooterData } from '@/lib/content-mappers'
-import type { PayloadResponse } from '@/lib/payload-client'
-import { createClientWithTenant, PayloadApiClient } from '@/lib/payload-client'
 import { isRecord } from '@/lib/utils'
 
-type FetchParams = Record<string, string | number | boolean | undefined>
-
-const isValidUrl = (value: string | null | undefined): boolean => {
-  if (typeof value !== 'string' || value.length === 0) {
-    return false
-  }
-
-  try {
-    new URL(value)
-    return true
-  } catch {
-    console.warn('[Kallitechnia] Ignoring invalid Payload URL:', value)
-    return false
-  }
-}
-
-export const hasPayloadBaseUrl = (): boolean => {
-  const baseUrl = process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL
-  return isValidUrl(baseUrl)
-}
-
-export async function createKalitechniaClient(): Promise<PayloadApiClient> {
-  return createClientWithTenant()
-}
-
-export async function fetchFooterData(client: PayloadApiClient): Promise<FooterData> {
-  if (!hasPayloadBaseUrl()) {
+export async function fetchFooterData(): Promise<FooterData> {
+  const apiUrl = process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL
+  if (!apiUrl) {
     return defaultFooterData
   }
 
   try {
-    const footerPage = await client.getPageBySlug('header-footer-kallitechnia', {
-      params: { depth: 0 },
-    })
+    const client = getApiClient()
+    const footerPage = await client.getPage('header-footer-kallitechnia', 0)
 
     if (!footerPage) {
       return defaultFooterData
@@ -45,49 +24,54 @@ export async function fetchFooterData(client: PayloadApiClient): Promise<FooterD
     const footer = extractFooter(footerPage)
     return mapFooterContent(footer)
   } catch (error) {
-    console.error('[Kallitechnia] Failed to fetch footer data:', error)
+    console.error('[Server] Failed to fetch footer data:', error)
     return defaultFooterData
   }
 }
 
-export async function fetchPageContent(client: PayloadApiClient, slug: string, depth = 2) {
-  if (!hasPayloadBaseUrl()) {
+export async function fetchPageContent(slug: string, depth = 2) {
+  const apiUrl = process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL
+  if (!apiUrl) {
     return null
   }
 
-  const page = await client.getPageBySlug(slug, {
-    params: { depth },
-  })
-  return page ?? null
+  try {
+    const client = getApiClient()
+    return await client.getPage(slug, depth)
+  } catch (error) {
+    console.error('[Server] Failed to fetch page content:', { slug, error })
+    return null
+  }
 }
 
-export async function fetchPosts(client: PayloadApiClient, params: FetchParams = {}) {
-  if (!hasPayloadBaseUrl()) {
-    return { docs: [] } satisfies PayloadResponse
+export async function fetchPosts(options: { limit?: number; depth?: number } = {}) {
+  const apiUrl = process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL
+  if (!apiUrl) {
+    return []
   }
 
-  const sanitizedParams = Object.entries(params).reduce<Record<string, string | number | boolean>>((acc, [key, value]) => {
-    if (value !== undefined) {
-      acc[key] = value
-    }
-    return acc
-  }, {})
-
-  const response = await client.getPosts({
-    params: sanitizedParams,
-  })
-  return response ?? ({ docs: [] } satisfies PayloadResponse)
+  try {
+    const client = getApiClient()
+    return await client.getPosts(options)
+  } catch (error) {
+    console.error('[Server] Failed to fetch posts:', error)
+    return []
+  }
 }
 
-export async function fetchPostBySlug(client: PayloadApiClient, slug: string) {
-  if (!hasPayloadBaseUrl()) {
+export async function fetchPostBySlug(slug: string) {
+  const apiUrl = process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL
+  if (!apiUrl) {
     return null
   }
 
-  const post = await client.getPostBySlug(slug, {
-    params: { depth: 2 },
-  })
-  return post ?? null
+  try {
+    const client = getApiClient()
+    return await client.getPostBySlug(slug, 2)
+  } catch (error) {
+    console.error('[Server] Failed to fetch post:', { slug, error })
+    return null
+  }
 }
 
 export function extractSections(page: unknown): unknown {
@@ -127,4 +111,3 @@ function extractFooter(page: unknown): unknown {
 
   return undefined
 }
-

@@ -4,7 +4,7 @@ import Footer from "@/components/Footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { mapKalitechniaMedia } from "@/lib/page-content"
-import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
+import { extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
 
 const socialIcons = {
   facebook: Facebook,
@@ -18,9 +18,7 @@ const socialIcons = {
 }
 
 export default async function MediaPage() {
-  const client = await createKalitechniaClient()
-
-  const [page, footerData] = await Promise.all([fetchPageContent(client, "kallitechnia-media", 2), fetchFooterData(client)])
+  const [page, footerData] = await Promise.all([fetchPageContent("kallitechnia-media", 2), fetchFooterData()])
 
   const content = extractSections(page)
   const data = mapKalitechniaMedia(content)

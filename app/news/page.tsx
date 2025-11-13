@@ -4,24 +4,19 @@ import { Calendar } from "lucide-react"
 import Footer from "@/components/Footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { mapKalitechniaNewsList } from "@/lib/page-content"
-import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageContent, fetchPosts } from "@/lib/server/content"
+import { extractSections, fetchFooterData, fetchPageContent, fetchPosts } from "@/lib/server/content"
 import { isRecord } from "@/lib/utils"
 
 export default async function NewsPage() {
-  const client = await createKalitechniaClient()
-
-  const [page, footerData, postsResponse] = await Promise.all([
-    fetchPageContent(client, "kallitechnia-news", 2),
-    fetchFooterData(client),
-    fetchPosts(client, {
-      limit: 36,
-      sort: "-publishedAt",
-    }),
+  const [page, footerData, posts] = await Promise.all([
+    fetchPageContent("kallitechnia-news", 2),
+    fetchFooterData(),
+    fetchPosts({ limit: 36 }),
   ])
 
   const content = extractSections(page)
-  const posts = Array.isArray(postsResponse.docs) ? postsResponse.docs.map((doc) => (isRecord(doc) ? doc : {})) : []
-  const data = mapKalitechniaNewsList(content, posts)
+  const postsList = Array.isArray(posts) ? posts.map((doc) => (isRecord(doc) ? doc : {})) : []
+  const data = mapKalitechniaNewsList(content, postsList)
 
   return (
     <div className="min-h-screen">

@@ -13,7 +13,7 @@ import {
   type IconName,
   type RegistrationPageData,
 } from "@/lib/page-content"
-import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
+import { extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
 
 const iconMap = {
   mapPin: MapPin,
@@ -27,11 +27,9 @@ const iconMap = {
 } satisfies Record<IconName, typeof MapPin>
 
 export default async function RegistrationPage() {
-  const client = await createKalitechniaClient()
-
   const [page, footerData] = await Promise.all([
-    fetchPageContent(client, "kallitechnia-registration", 2),
-    fetchFooterData(client),
+    fetchPageContent("kallitechnia-registration", 2),
+    fetchFooterData(),
   ])
 
   const content = extractSections(page)

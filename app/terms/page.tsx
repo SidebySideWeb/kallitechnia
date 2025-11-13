@@ -1,13 +1,11 @@
 import Footer from "@/components/Footer"
 import { mapKalitechniaTerms } from "@/lib/page-content"
-import { createKalitechniaClient, fetchFooterData, fetchPageContent } from "@/lib/server/content"
+import { fetchFooterData, fetchPageContent } from "@/lib/server/content"
 
 export default async function TermsPage() {
-  const client = await createKalitechniaClient()
-
   const [page, footerData] = await Promise.all([
-    fetchPageContent(client, "kallitechnia-terms", 2),
-    fetchFooterData(client),
+    fetchPageContent("kallitechnia-terms", 2),
+    fetchFooterData(),
   ])
 
   const data = mapKalitechniaTerms(page)

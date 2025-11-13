@@ -4,7 +4,7 @@ import { Calendar, User } from "lucide-react"
 
 import Footer from "@/components/Footer"
 import { mapKalitechniaNewsPost } from "@/lib/page-content"
-import { createKalitechniaClient, fetchFooterData, fetchPostBySlug } from "@/lib/server/content"
+import { fetchFooterData, fetchPostBySlug } from "@/lib/server/content"
 
 type NewsPostPageProps = {
   params: Promise<{ slug: string }>
@@ -13,9 +13,7 @@ type NewsPostPageProps = {
 export default async function NewsPostPage({ params }: NewsPostPageProps) {
   const { slug } = await params
 
-  const client = await createKalitechniaClient()
-
-  const [postDoc, footerData] = await Promise.all([fetchPostBySlug(client, slug), fetchFooterData(client)])
+  const [postDoc, footerData] = await Promise.all([fetchPostBySlug(slug), fetchFooterData()])
   const post = mapKalitechniaNewsPost(postDoc)
 
   if (!post) {

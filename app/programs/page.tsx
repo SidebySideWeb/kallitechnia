@@ -4,14 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Footer from "@/components/Footer"
 import { mapKalitechniaPrograms } from "@/lib/page-content"
-import { createKalitechniaClient, extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
+import { extractSections, fetchFooterData, fetchPageContent } from "@/lib/server/content"
 
 export default async function ProgramsPage() {
-  const client = await createKalitechniaClient()
-
   const [page, footerData] = await Promise.all([
-    fetchPageContent(client, "kallitechnia-programs", 2),
-    fetchFooterData(client),
+    fetchPageContent("kallitechnia-programs", 2),
+    fetchFooterData(),
   ])
 
   const content = extractSections(page)
