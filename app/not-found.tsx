@@ -1,11 +1,10 @@
 import Link from "next/link"
 
 import Footer from "@/components/Footer"
-import { createKalitechniaClient, fetchFooterData } from "@/lib/server/content"
+import { fetchFooterData } from "@/lib/server/content"
 
 export default async function NotFound() {
-  const client = await createKalitechniaClient()
-  const footerData = await fetchFooterData(client)
+  const footerData = await fetchFooterData()
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
