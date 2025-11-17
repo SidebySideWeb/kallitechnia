@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: #f9fafb;
@@ -22,25 +23,79 @@
   --border: #e0e0e0;
   --input: #e0e0e0;
   --ring: #7b1fa2;
-  --radius: 16px;
+  --radius: 1rem;
+  --footer-bg: #311b92;
+  --footer-text: #e0f7fa;
+}
+
+.dark {
+  --background: #263238;
+  --foreground: #f9fafb;
+  --card: #263238;
+  --card-foreground: #f9fafb;
+  --popover: #263238;
+  --popover-foreground: #f9fafb;
+}
+
+@theme inline {
+  --font-sans: var(--font-nunito), "Nunito Sans", system-ui, sans-serif;
+  --font-heading: var(--font-poppins), "Poppins", system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 500; /* Reduced from bold (700) to medium (500) */
+    line-height: 1.2; /* Reduced line spacing for tighter title spacing */
+  }
+  h1 {
+    font-weight: 500; /* Reduced weight for h1 */
+    line-height: 1.3; /* Tighter spacing for h1 titles */
+  }
+  h2 {
+    line-height: 1.25;
+  }
+  h3 {
+    line-height: 1.2;
+  }
 }
 
 html {
   scroll-behavior: smooth;
-}
-
-body {
-  @apply bg-background text-foreground antialiased;
-  font-family: var(--font-nunito), system-ui, sans-serif;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-poppins), var(--font-nunito), system-ui, sans-serif;
 }
 
 .container {

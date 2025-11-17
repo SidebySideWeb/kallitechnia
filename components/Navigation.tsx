@@ -1,90 +1,72 @@
 "use client"
 
-import { useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
+import Image from "next/image"
+import { useState } from "react"
 import { Menu, X } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
-import { defaultHeaderData } from "@/lib/content-mappers"
 
-type HeaderData = typeof defaultHeaderData & {
-  logo_image?: string
-}
-
-interface NavigationProps {
-  data?: HeaderData
-}
-
-export default function Navigation({ data = defaultHeaderData }: NavigationProps) {
+export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
 
-  const menuItems = Array.isArray(data.menu) && data.menu.length > 0 ? data.menu : defaultHeaderData.menu
-  const toggleMenu = () => setIsOpen((prev) => !prev)
-  const closeMenu = () => setIsOpen(false)
+  const navItems = [
+    { href: "/", label: "Αρχική" },
+    { href: "/about", label: "Ο Σύλλογος" },
+    { href: "/news", label: "Νέα" },
+    { href: "/programs", label: "Πρόγραμμα" },
+    { href: "/registration", label: "Εγγραφές" },
+    { href: "/contact", label: "Επικοινωνία" },
+  ]
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-[#F5F5F5]/95 backdrop-blur-sm shadow-sm">
-      <div className="container mx-auto px-6 md:px-8">
-        <div className="flex h-20 items-center justify-between">
-          <Link href={data.logo_text ? '/' : '#'} className="flex items-center gap-3">
-            {data.logo_image ? (
-              <Image
-                src={data.logo_image}
-                alt={data.logo_text ?? 'Kallitechnia'}
-                width={180}
-                height={60}
-                priority
-                sizes="180px"
-                className="h-16 w-auto"
-              />
-            ) : (
-              <span className="text-2xl font-semibold text-primary">{data.logo_text ?? defaultHeaderData.logo_text}</span>
-            )}
+    <nav className="sticky top-0 z-50 bg-[#F5F5F5]/95 backdrop-blur-sm border-b border-border shadow-sm">
+      <div className="container mx-auto px-8">
+        <div className="flex items-center justify-between h-20">
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Logo%20KGK%20%CF%85%CF%88%CE%B7%CE%BB%CE%AE%CF%82%20%CE%B1%CE%BD%CE%AC%CE%BB%CF%85%CF%83%CE%B7%CF%82-YP2dWdAD9HKxgCBQOBLccXnxTydRcQ.png"
+              alt="Kallitechnia Gymnastics Kefalonia"
+              width={180}
+              height={60}
+              priority
+              sizes="180px"
+              className="h-16 w-auto"
+            />
           </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
-            {menuItems.map((item) => (
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            {navItems.map((item) => (
               <Link
-                key={`${item.link ?? item.label}`}
-                href={item.link ?? '#'}
-                className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                key={item.href}
+                href={item.href}
+                className="text-foreground hover:text-primary font-medium transition-colors text-lg"
               >
                 {item.label}
               </Link>
             ))}
-            {data.cta?.label && (
-              <Button asChild className="rounded-full bg-primary px-6 text-base shadow-md hover:bg-primary/90">
-                <Link href={data.cta.link ?? '#'}>{data.cta.label}</Link>
-              </Button>
-            )}
           </div>
 
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMenu} aria-label="Toggle navigation">
+          {/* Mobile Menu Button */}
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
 
+        {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden">
-            <div className="border-t border-border py-4">
-              <div className="flex flex-col gap-4">
-                {menuItems.map((item) => (
-                  <Link
-                    key={`${item.link ?? item.label}`}
-                    href={item.link ?? '#'}
-                    className="py-2 text-lg font-medium text-foreground transition-colors hover:text-primary"
-                    onClick={closeMenu}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                {data.cta?.label && (
-                  <Button onClick={closeMenu} asChild className="rounded-full bg-primary text-base">
-                    <Link href={data.cta.link ?? '#'}>{data.cta.label}</Link>
-                  </Button>
-                )}
-              </div>
+          <div className="md:hidden py-4 border-t border-border">
+            <div className="flex flex-col gap-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-foreground hover:text-primary font-medium transition-colors text-lg py-2"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </div>
         )}
@@ -92,3 +74,6 @@ export default function Navigation({ data = defaultHeaderData }: NavigationProps
     </nav>
   )
 }
+
+export default Navigation
+

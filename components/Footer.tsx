@@ -1,137 +1,143 @@
-import type { ComponentType } from "react"
-import Image from "next/image"
 import Link from "next/link"
-import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react"
+import Image from "next/image"
+import { Facebook, Instagram, Mail, Phone, MapPin, Youtube } from "lucide-react"
 
-import { defaultFooterData } from "@/lib/content-mappers"
-
-type FooterData = typeof defaultFooterData
-
-interface FooterProps {
-  data?: FooterData
-}
-
-const socialIcons: Record<string, ComponentType<{ className?: string }>> = {
-  facebook: Facebook,
-  instagram: Instagram,
-  youtube: Youtube,
-  mail: Mail,
-  phone: Phone,
-}
-
-export default function Footer({ data = defaultFooterData }: FooterProps) {
-  const brand = data.brand ?? defaultFooterData.brand
-  const contact = data.contact ?? defaultFooterData.contact
-  const links = Array.isArray(data.links?.items) && data.links?.items.length > 0 ? data.links.items : defaultFooterData.links.items
-  const socials = Array.isArray(data.socials) && data.socials.length > 0 ? data.socials : defaultFooterData.socials
-  const externalLinks = Array.isArray(data.externalLinks) && data.externalLinks.length > 0 ? data.externalLinks : defaultFooterData.externalLinks
-  const legalLinks = Array.isArray(data.legalLinks) && data.legalLinks.length > 0 ? data.legalLinks : defaultFooterData.legalLinks
-
+export function Footer() {
   return (
-    <footer className="mt-20 bg-[#311B92] py-[30px] text-[#E0F7FA]">
-      <div className="container mx-auto px-4">
-        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
+    <footer className="bg-[#311B92] text-[#E0F7FA] mt-20">
+      <div className="container mx-auto px-4" style={{ paddingTop: '20px', paddingBottom: '20px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          {/* Logo & Description */}
           <div>
-            {brand.logo_image ? (
-              <Image
-                src={brand.logo_image}
-                alt={brand.name}
-                width={234}
-                height={78}
-                className="mb-4 h-16 w-auto brightness-0 invert"
-              />
-            ) : (
-              <p className="mb-4 text-2xl font-semibold">{brand.name}</p>
-            )}
-            {brand.tagline && <p className="text-base font-medium">{brand.tagline}</p>}
-            {brand.description && <p className="mt-3 text-sm leading-relaxed">{brand.description}</p>}
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Logo%20KGK%20%CF%85%CF%88%CE%B7%CE%BB%CE%AE%CF%82%20%CE%B1%CE%BD%CE%AC%CE%BB%CF%85%CF%83%CE%B7%CF%82-YP2dWdAD9HKxgCBQOBLccXnxTydRcQ.png"
+              alt="Kallitechnia Gymnastics Kefalonia"
+              width={180}
+              height={60}
+              className="h-12 w-auto mb-4 brightness-0 invert"
+            />
+            <p className="text-sm leading-relaxed">
+              Σύλλογος Γυμναστικής Καλλιτεχνίας στην Κεφαλονιά. Προάγουμε την αθλητική αριστεία και την υγιή ανάπτυξη
+              των παιδιών.
+            </p>
           </div>
 
+          {/* Quick Links */}
           <div>
-            <h3 className="mb-4 text-lg font-bold">{data.links?.title ?? defaultFooterData.links.title}</h3>
+            <h3 className="font-bold text-lg mb-4">Γρήγοροι Σύνδεσμοι</h3>
             <ul className="space-y-2">
-              {links.map((item, index) => (
-                <li key={`${item.href}-${index}`}>
-                  <Link href={item.href ?? '#'} className="transition-colors hover:text-secondary">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/" className="hover:text-secondary transition-colors">
+                  Αρχική
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-secondary transition-colors">
+                  Ο Σύλλογος
+                </Link>
+              </li>
+              <li>
+                <Link href="/news" className="hover:text-secondary transition-colors">
+                  Νέα
+                </Link>
+              </li>
+              <li>
+                <Link href="/programs" className="hover:text-secondary transition-colors">
+                  Αθλήματα – Τμήματα
+                </Link>
+              </li>
+              <li>
+                <Link href="/registration" className="hover:text-secondary transition-colors">
+                  Εγγραφές
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-secondary transition-colors">
+                  Επικοινωνία
+                </Link>
+              </li>
             </ul>
           </div>
 
+          {/* Contact Info */}
           <div>
-            <h3 className="mb-4 text-lg font-bold">{contact.title ?? 'Επικοινωνία'}</h3>
-            <ul className="space-y-3 text-sm">
-              {contact.address && (
-                <li className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0" />
-                  <span>{contact.address}</span>
-                </li>
-              )}
-              {contact.phone && (
-                <li className="flex items-center gap-2">
-                  <Phone className="h-5 w-5 flex-shrink-0" />
-                  <span>{contact.phone}</span>
-                </li>
-              )}
-              {contact.email && (
-                <li className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 flex-shrink-0" />
-                  <a href={`mailto:${contact.email}`} className="transition-colors hover:text-secondary">
-                    {contact.email}
-                  </a>
-                </li>
-              )}
+            <h3 className="font-bold text-lg mb-4">Επικοινωνία</h3>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-2">
+                <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="text-sm">Αργοστόλι, Κεφαλονιά</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm">+30 123 456 7890</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm">info@kallitechnia-kefalonia.gr</span>
+              </li>
             </ul>
-            {socials.length > 0 && (
-              <div className="mt-4 flex gap-4">
-                {socials.map((social, index) => {
-                  const Icon = socialIcons[social.icon?.toLowerCase?.() ?? ''] ?? SparkIconFallback
-                  return (
-                    <a
-                      key={`${social.href}-${index}`}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="transition-colors hover:text-secondary"
-                      aria-label={social.label}
-                    >
-                      <Icon className="h-6 w-6" />
-                    </a>
-                  )
-                })}
-              </div>
-            )}
+            <div className="flex gap-4 mt-4">
+              <a
+                href="https://www.facebook.com/share/1CrWN7pqCy/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-6 w-6" />
+              </a>
+              <a
+                href="https://www.instagram.com/kallitechniagymnastics?igsh=MTRodDdpdW02c3MyYg%3D%3D&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-6 w-6" />
+              </a>
+              <a
+                href="https://youtube.com/@kallitechniagymnastics?si=sZvo_JM4gkKPu0Lp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors"
+                aria-label="YouTube"
+              >
+                <Youtube className="h-6 w-6" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {externalLinks.length > 0 && (
-          <div className="mb-6 border-t border-[#4527A0] pt-[30px]">
-            <div className="flex flex-wrap justify-center gap-6">
-              {externalLinks.map((link, index) => (
-                <a
-                  key={`${link.href}-${index}`}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm transition-colors hover:text-secondary"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
+        <div className="border-t border-[#4527A0] pt-6 mb-6">
+          <div className="flex flex-wrap gap-6 justify-center">
+            <a
+              href="https://www.gymnastics.sport/site/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-secondary transition-colors text-sm"
+            >
+              FIG - International Gymnastics Federation
+            </a>
+            <a
+              href="https://www.ego-gymnastics.gr/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-secondary transition-colors text-sm"
+            >
+              ΕΓΟ - Ελληνική Γυμναστική Ομοσπονδία
+            </a>
           </div>
-        )}
+        </div>
 
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-[#4527A0] pt-[30px] text-sm md:flex-row">
-          <p>{data.copyright ?? defaultFooterData.copyright}</p>
+        <div className="border-t border-[#4527A0] pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+          <p>&copy; 2025 Γυμναστική Καλλιτεχνία Κεφαλονιάς. Όλα τα δικαιώματα διατηρούνται.</p>
           <div className="flex gap-4">
-            {legalLinks.map((item, index) => (
-              <Link key={`${item.href}-${index}`} href={item.href ?? '#'} className="transition-colors hover:text-secondary">
-                {item.label}
-              </Link>
-            ))}
+            <Link href="/terms" className="hover:text-secondary transition-colors">
+              Όροι Χρήσης
+            </Link>
+            <Link href="/terms" className="hover:text-secondary transition-colors">
+              Πολιτική Απορρήτου
+            </Link>
           </div>
         </div>
       </div>
@@ -139,6 +145,5 @@ export default function Footer({ data = defaultFooterData }: FooterProps) {
   )
 }
 
-function SparkIconFallback({ className }: { className?: string }) {
-  return <span className={`block h-6 w-6 rounded-full border border-current ${className ?? ''}`} />
-}
+export default Footer
+

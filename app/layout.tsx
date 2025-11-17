@@ -1,72 +1,51 @@
-import Navigation from "@/components/Navigation"
-import { defaultHeaderData, mapHeaderContent } from "@/lib/content-mappers"
-import { getApiClient } from "@/lib/api-client"
-import { isRecord } from "@/lib/utils"
+import type React from "react"
 import type { Metadata } from "next"
-import { Nunito, Poppins } from "next/font/google"
+import { Poppins, Nunito_Sans } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
-const nunito = Nunito({
-  subsets: ['latin-ext'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-nunito',
+const poppins = Poppins({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-poppins",
   display: 'swap',
 })
 
-const poppins = Poppins({
-  subsets: ['latin-ext'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-poppins',
+const nunitoSans = Nunito_Sans({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600"],
+  variable: "--font-nunito",
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Καλλιτεχνία – Σύλλογος Γυμναστικής',
-  description: 'Καλλιτεχνία: Ρυθμική και καλλιτεχνική γυμναστική στην Κεφαλονιά.',
+  title: {
+    default: "Γυμναστική Καλλιτεχνία Κεφαλονιάς",
+    template: "%s | Γυμναστική Καλλιτεχνία Κεφαλονιάς"
+  },
+  description: "Σύλλογος Γυμναστικής Καλλιτεχνίας στην Κεφαλονιά. Προάγουμε την αθλητική αριστεία και την υγιή ανάπτυξη των παιδιών.",
+  keywords: ["γυμναστική", "καλλιτεχνική γυμναστική", "κεφαλονιά", "σύλλογος", "αθλητισμός"],
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  let headerData = defaultHeaderData
-
-  try {
-    const canFetchPayload = Boolean(process.env.NEXT_PUBLIC_PAYLOAD_URL || process.env.PAYLOAD_URL)
-    if (canFetchPayload) {
-      const client = getApiClient()
-      const headerFooterPage = await client.getPage('header-footer-kallitechnia', 0)
-
-      const cmsHeader = extractHeader(headerFooterPage)
-      if (cmsHeader !== undefined) {
-        headerData = mapHeaderContent(cmsHeader)
-      }
-    }
-  } catch (error) {
-    console.error('[Kallitechnia Layout] Failed to fetch header data:', error)
-  }
-
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
-    <html lang="el" className={`${nunito.variable} ${poppins.variable}`}>
-      <body className="bg-background font-sans antialiased">
-        <Navigation data={headerData} />
-        {children}
+    <html lang="el" suppressHydrationWarning>
+      <body className={`${nunitoSans.variable} ${poppins.variable} font-sans antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
-}
-
-function extractHeader(page: unknown): unknown {
-  if (!isRecord(page)) {
-    return undefined
-  }
-
-  const content = isRecord(page.content) ? page.content : undefined
-  if (content && 'header' in content) {
-    return (content as Record<string, unknown>).header
-  }
-
-  const sharedLayout = isRecord(page.sharedLayout) ? page.sharedLayout : undefined
-  if (sharedLayout && 'header' in sharedLayout) {
-    return (sharedLayout as Record<string, unknown>).header
-  }
-
-  return undefined
 }
