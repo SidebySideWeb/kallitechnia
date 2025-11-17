@@ -13,5 +13,8 @@ out
 Thumbs.db
 coverage
 *.local
-*.lock
+# Keep pnpm-lock.yaml for Vercel
+# *.lock
+yarn.lock
+package-lock.json
 
