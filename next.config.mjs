@@ -19,47 +19,54 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     // Explicitly resolve path aliases for Vercel compatibility
     const projectRoot = path.resolve(__dirname)
     
     // Ensure resolve object exists
-    if (!config.resolve) {
-      config.resolve = {}
-    }
+    config.resolve = config.resolve || {}
     
-    // Set alias - must be absolute path, override any existing @ alias
+    // CRITICAL: Override @ alias with absolute path - this must come first
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': projectRoot,
     }
     
-    // Ensure modules are resolved from project root first
-    if (!config.resolve.modules) {
-      config.resolve.modules = []
-    }
+    // Ensure modules array exists and project root is first
+    config.resolve.modules = config.resolve.modules || []
     
-    // Remove projectRoot if already in modules to avoid duplicates
-    const filteredModules = config.resolve.modules.filter((m) => m !== projectRoot)
+    // Remove any existing projectRoot to avoid duplicates
+    const modulesWithoutRoot = config.resolve.modules.filter((m) => {
+      if (typeof m === 'string') {
+        return path.resolve(m) !== projectRoot
+      }
+      return true
+    })
+    
+    // Put project root FIRST in modules array
     config.resolve.modules = [
       projectRoot,
-      ...filteredModules,
+      ...modulesWithoutRoot,
       'node_modules',
     ]
     
-    // Ensure extensions are resolved (TypeScript first)
-    if (!config.resolve.extensions) {
-      config.resolve.extensions = []
-    }
-    
-    const defaultExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
+    // Ensure extensions include TypeScript
+    config.resolve.extensions = config.resolve.extensions || []
+    const requiredExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
     const existingExtensions = config.resolve.extensions.filter(
-      (ext) => !defaultExtensions.includes(ext)
+      (ext) => !requiredExtensions.includes(ext)
     )
     config.resolve.extensions = [
-      ...defaultExtensions,
+      ...requiredExtensions,
       ...existingExtensions,
     ]
+    
+    // Debug logging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Webpack Config] Project Root:', projectRoot)
+      console.log('[Webpack Config] Alias @:', config.resolve.alias['@'])
+      console.log('[Webpack Config] Modules:', config.resolve.modules)
+    }
     
     return config
   },
