@@ -6,10 +6,6 @@ const __dirname = path.dirname(__filename)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Force webpack (disable Turbopack) for Vercel compatibility
-  experimental: {
-    turbo: false,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
