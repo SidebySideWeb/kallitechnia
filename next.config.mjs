@@ -21,17 +21,31 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     // Explicitly resolve path aliases for Vercel compatibility
+    const projectRoot = path.resolve(__dirname)
+    
+    // Ensure resolve object exists
     config.resolve = config.resolve || {}
+    
+    // Set alias - must be absolute path
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      '@': path.resolve(__dirname, '.'),
+      '@': projectRoot,
     }
     
-    // Ensure modules are resolved from project root
+    // Ensure modules are resolved from project root first
+    const existingModules = config.resolve.modules || []
     config.resolve.modules = [
-      ...(config.resolve.modules || []),
-      path.resolve(__dirname, '.'),
+      projectRoot,
+      ...existingModules.filter((m) => m !== projectRoot),
       'node_modules',
+    ]
+    
+    // Ensure extensions are resolved
+    const existingExtensions = config.resolve.extensions || []
+    const defaultExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
+    config.resolve.extensions = [
+      ...defaultExtensions,
+      ...existingExtensions.filter((ext) => !defaultExtensions.includes(ext)),
     ]
     
     return config
