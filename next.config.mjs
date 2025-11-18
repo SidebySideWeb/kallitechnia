@@ -23,50 +23,63 @@ const nextConfig = {
     // Explicitly resolve path aliases for Vercel compatibility
     const projectRoot = path.resolve(__dirname)
     
-    // Ensure resolve object exists
+    // CRITICAL: Force webpack to use our resolve configuration
+    // Override any existing resolve config
     config.resolve = config.resolve || {}
     
-    // CRITICAL: Override @ alias with absolute path - this must come first
+    // Set alias - MUST be absolute path, override completely
     config.resolve.alias = {
-      ...config.resolve.alias,
+      ...(config.resolve.alias || {}),
       '@': projectRoot,
+      '@/components': path.join(projectRoot, 'components'),
+      '@/lib': path.join(projectRoot, 'lib'),
+      '@/app': path.join(projectRoot, 'app'),
     }
     
-    // Ensure modules array exists and project root is first
-    config.resolve.modules = config.resolve.modules || []
+    // Force modules resolution - project root MUST be first
+    const existingModules = Array.isArray(config.resolve.modules) 
+      ? config.resolve.modules 
+      : []
     
-    // Remove any existing projectRoot to avoid duplicates
-    const modulesWithoutRoot = config.resolve.modules.filter((m) => {
+    // Filter out projectRoot if it exists
+    const filteredModules = existingModules.filter((m) => {
       if (typeof m === 'string') {
-        return path.resolve(m) !== projectRoot
+        try {
+          return path.resolve(m) !== projectRoot
+        } catch {
+          return true
+        }
       }
       return true
     })
     
-    // Put project root FIRST in modules array
+    // Set modules with project root first
     config.resolve.modules = [
       projectRoot,
-      ...modulesWithoutRoot,
+      ...filteredModules,
       'node_modules',
     ]
     
-    // Ensure extensions include TypeScript
-    config.resolve.extensions = config.resolve.extensions || []
-    const requiredExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
-    const existingExtensions = config.resolve.extensions.filter(
-      (ext) => !requiredExtensions.includes(ext)
-    )
-    config.resolve.extensions = [
-      ...requiredExtensions,
-      ...existingExtensions,
+    // Ensure extensions are set correctly
+    const defaultExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
+    const existingExtensions = Array.isArray(config.resolve.extensions)
+      ? config.resolve.extensions
+      : []
+    
+    const uniqueExtensions = [
+      ...defaultExtensions,
+      ...existingExtensions.filter((ext) => !defaultExtensions.includes(ext)),
     ]
     
-    // Debug logging in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Webpack Config] Project Root:', projectRoot)
-      console.log('[Webpack Config] Alias @:', config.resolve.alias['@'])
-      console.log('[Webpack Config] Modules:', config.resolve.modules)
-    }
+    config.resolve.extensions = uniqueExtensions
+    
+    // Force symlinks to be resolved
+    config.resolve.symlinks = false
+    
+    // Log for debugging (works in Vercel build logs)
+    console.log('[Webpack] Project Root:', projectRoot)
+    console.log('[Webpack] Alias @:', config.resolve.alias['@'])
+    console.log('[Webpack] Components alias:', config.resolve.alias['@/components'])
     
     return config
   },
