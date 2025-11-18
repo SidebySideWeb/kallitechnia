@@ -6,6 +6,10 @@ const __dirname = path.dirname(__filename)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Force webpack (disable Turbopack) for Vercel compatibility
+  experimental: {
+    turbo: false,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -24,28 +28,41 @@ const nextConfig = {
     const projectRoot = path.resolve(__dirname)
     
     // Ensure resolve object exists
-    config.resolve = config.resolve || {}
+    if (!config.resolve) {
+      config.resolve = {}
+    }
     
-    // Set alias - must be absolute path
+    // Set alias - must be absolute path, override any existing @ alias
     config.resolve.alias = {
-      ...(config.resolve.alias || {}),
+      ...config.resolve.alias,
       '@': projectRoot,
     }
     
     // Ensure modules are resolved from project root first
-    const existingModules = config.resolve.modules || []
+    if (!config.resolve.modules) {
+      config.resolve.modules = []
+    }
+    
+    // Remove projectRoot if already in modules to avoid duplicates
+    const filteredModules = config.resolve.modules.filter((m) => m !== projectRoot)
     config.resolve.modules = [
       projectRoot,
-      ...existingModules.filter((m) => m !== projectRoot),
+      ...filteredModules,
       'node_modules',
     ]
     
-    // Ensure extensions are resolved
-    const existingExtensions = config.resolve.extensions || []
+    // Ensure extensions are resolved (TypeScript first)
+    if (!config.resolve.extensions) {
+      config.resolve.extensions = []
+    }
+    
     const defaultExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
+    const existingExtensions = config.resolve.extensions.filter(
+      (ext) => !defaultExtensions.includes(ext)
+    )
     config.resolve.extensions = [
       ...defaultExtensions,
-      ...existingExtensions.filter((ext) => !defaultExtensions.includes(ext)),
+      ...existingExtensions,
     ]
     
     return config
