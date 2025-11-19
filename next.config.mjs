@@ -1,6 +1,5 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
-import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -27,81 +26,71 @@ const nextConfig = {
   webpack: (config, { isServer, webpack }) => {
     const projectRoot = path.resolve(__dirname)
     
-    // CRITICAL: Ensure resolve object exists
+    // Next.js automatically reads tsconfig.json paths, but we need to ensure
+    // webpack respects them. The key is to NOT override existing aliases that
+    // Next.js has already set up from tsconfig.json
+    
+    // Ensure resolve object exists
     config.resolve = config.resolve || {}
-    config.resolve.alias = config.resolve.alias || {}
     
-    // Set aliases with absolute paths - these MUST be set
-    config.resolve.alias['@'] = projectRoot
-    config.resolve.alias['@/components'] = path.join(projectRoot, 'components')
-    config.resolve.alias['@/lib'] = path.join(projectRoot, 'lib')
-    config.resolve.alias['@/app'] = path.join(projectRoot, 'app')
+    // Only add @ alias if it doesn't exist (Next.js might have already set it)
+    if (!config.resolve.alias) {
+      config.resolve.alias = {}
+    }
     
-    // Force modules array
+    // Set @ alias to project root - this is the base for all @/* imports
+    // Next.js should handle @/components/* automatically via tsconfig.json paths
+    if (!config.resolve.alias['@']) {
+      config.resolve.alias['@'] = projectRoot
+    }
+    
+    // Ensure modules array includes project root for fallback resolution
     if (!Array.isArray(config.resolve.modules)) {
       config.resolve.modules = []
     }
     
-    // Ensure project root is first in modules
-    const existingModules = config.resolve.modules.filter((m) => {
+    // Add project root to modules if not already present
+    const hasProjectRoot = config.resolve.modules.some((m) => {
       if (typeof m === 'string') {
         try {
-          const resolved = path.resolve(m)
-          return resolved !== projectRoot && resolved !== path.resolve(projectRoot)
+          return path.resolve(m) === projectRoot
         } catch {
-          return true
+          return false
         }
       }
-      return true
+      return false
     })
     
-    config.resolve.modules = [
-      projectRoot,
-      ...existingModules,
-      'node_modules',
-    ]
+    if (!hasProjectRoot) {
+      config.resolve.modules = [
+        projectRoot,
+        ...config.resolve.modules,
+        'node_modules',
+      ]
+    }
     
-    // Ensure extensions
+    // Ensure extensions include TypeScript/JavaScript
     if (!Array.isArray(config.resolve.extensions)) {
       config.resolve.extensions = []
     }
     
     const requiredExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
-    const existingExtensions = config.resolve.extensions.filter(
-      (ext) => !requiredExtensions.includes(ext)
+    const missingExtensions = requiredExtensions.filter(
+      (ext) => !config.resolve.extensions.includes(ext)
     )
     
-    config.resolve.extensions = [
-      ...requiredExtensions,
-      ...existingExtensions,
-    ]
-    
-    // Disable symlinks
-    config.resolve.symlinks = false
-    
-    // Add a custom resolver plugin to force resolution
-    config.plugins = config.plugins || []
-    
-    // Use NormalModuleReplacementPlugin to intercept and fix imports
-    const componentAliases = {
-      '@/components/navigation': path.join(projectRoot, 'components', 'navigation.tsx'),
-      '@/components/footer': path.join(projectRoot, 'components', 'footer.tsx'),
+    if (missingExtensions.length > 0) {
+      config.resolve.extensions = [
+        ...missingExtensions,
+        ...config.resolve.extensions,
+      ]
     }
     
-    Object.entries(componentAliases).forEach(([alias, realPath]) => {
-      config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(
-          new RegExp(`^${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
-          realPath
-        )
-      )
-    })
-    
-    // Debug logging
+    // Debug logging to see what Next.js has already configured
     console.log('[Webpack] Project Root:', projectRoot)
+    console.log('[Webpack] Existing aliases:', Object.keys(config.resolve.alias || {}))
     console.log('[Webpack] Alias @:', config.resolve.alias['@'])
-    console.log('[Webpack] Alias @/components:', config.resolve.alias['@/components'])
-    console.log('[Webpack] Components path exists:', fs.existsSync(path.join(projectRoot, 'components', 'navigation.tsx')))
+    console.log('[Webpack] Modules:', config.resolve.modules.slice(0, 3))
     
     return config
   },
