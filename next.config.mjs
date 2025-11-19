@@ -38,18 +38,70 @@ const nextConfig = {
     // Ensure resolve object exists
     config.resolve = config.resolve || {}
     
-    // CRITICAL: Create a fresh alias object to avoid conflicts
-    // Merge existing aliases but ensure ours take precedence
+    // CRITICAL: Only set base @ alias
+    // Webpack will resolve @/components/navigation by:
+    // 1. Matching @ to projectRoot
+    // 2. Resolving components/navigation relative to projectRoot
+    // Setting @/components as an alias breaks this because webpack treats it as a module
     const existingAliases = config.resolve.alias || {}
     config.resolve.alias = {
       ...existingAliases,
-      // Set base @ alias to project root
       '@': projectRoot,
-      // Explicitly set nested aliases - webpack needs these for @/components/navigation
-      '@/components': path.join(projectRoot, 'components'),
-      '@/lib': path.join(projectRoot, 'lib'),
-      '@/app': path.join(projectRoot, 'app'),
     }
+    
+    // Add a custom resolver plugin to handle @/components/* imports
+    // This ensures webpack can resolve nested paths correctly
+    if (!config.resolve.plugins) {
+      config.resolve.plugins = []
+    }
+    
+    // Custom resolver that handles @/components/navigation style imports
+    const originalResolve = config.resolve.plugins.find(
+      (p) => p.constructor.name === 'ModuleScopePlugin'
+    )
+    
+    // Add custom resolver after Next.js's resolver
+    config.resolve.plugins.push({
+      apply(resolver) {
+        resolver.hooks.resolve.tapAsync('CustomAliasResolver', (request, resolveContext, callback) => {
+          // Only handle requests starting with @/
+          if (request.request && request.request.startsWith('@/')) {
+            const requestPath = request.request.replace(/^@\//, '')
+            const resolvedPath = path.join(projectRoot, requestPath)
+            
+            // Try to resolve with extensions
+            const extensions = config.resolve.extensions || ['.tsx', '.ts', '.jsx', '.js', '.json']
+            for (const ext of extensions) {
+              const fullPath = resolvedPath + ext
+              if (fs.existsSync(fullPath)) {
+                return callback(null, {
+                  ...request,
+                  path: fullPath,
+                  request: fullPath,
+                })
+              }
+            }
+            
+            // If no file found, try as directory with index
+            if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isDirectory()) {
+              for (const ext of extensions) {
+                const indexPath = path.join(resolvedPath, `index${ext}`)
+                if (fs.existsSync(indexPath)) {
+                  return callback(null, {
+                    ...request,
+                    path: indexPath,
+                    request: indexPath,
+                  })
+                }
+              }
+            }
+          }
+          
+          // Let webpack handle it normally
+          callback()
+        })
+      },
+    })
     
     // Ensure modules array includes project root
     if (!Array.isArray(config.resolve.modules)) {
