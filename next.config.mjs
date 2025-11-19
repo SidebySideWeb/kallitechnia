@@ -37,12 +37,19 @@ const nextConfig = {
     
     // Ensure resolve object exists
     config.resolve = config.resolve || {}
-    config.resolve.alias = config.resolve.alias || {}
     
-    // CRITICAL: Only set the base @ alias to project root
-    // Webpack will resolve @/components/navigation as projectRoot/components/navigation
-    // Setting nested aliases like @/components can interfere with resolution
-    config.resolve.alias['@'] = projectRoot
+    // CRITICAL: Create a fresh alias object to avoid conflicts
+    // Merge existing aliases but ensure ours take precedence
+    const existingAliases = config.resolve.alias || {}
+    config.resolve.alias = {
+      ...existingAliases,
+      // Set base @ alias to project root
+      '@': projectRoot,
+      // Explicitly set nested aliases - webpack needs these for @/components/navigation
+      '@/components': path.join(projectRoot, 'components'),
+      '@/lib': path.join(projectRoot, 'lib'),
+      '@/app': path.join(projectRoot, 'app'),
+    }
     
     // Ensure modules array includes project root
     if (!Array.isArray(config.resolve.modules)) {
