@@ -2,7 +2,8 @@
  * API utilities for fetching data from Payload CMS
  */
 
-const PAYLOAD_URL = process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3000'
+// Remove trailing slash from URL to avoid double slashes
+const PAYLOAD_URL = (process.env.NEXT_PUBLIC_PAYLOAD_URL || 'https://cms.ftiaxesite.gr').replace(/\/$/, '')
 const TENANT_SLUG = process.env.NEXT_PUBLIC_TENANT_SLUG || 'kalitechnia'
 
 export interface Post {
