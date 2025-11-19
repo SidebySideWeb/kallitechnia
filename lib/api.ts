@@ -46,11 +46,11 @@ function buildQueryString(params: Record<string, string | number>): string {
  */
 export async function fetchLatestPosts(limit: number = 3): Promise<Post[]> {
   try {
-    // First, get the tenant ID by slug
-    // Payload CMS uses bracket notation: where[slug][equals]=value
+    // First, get the tenant ID by code (Tenants collection uses 'code' field, not 'slug')
+    // Payload CMS uses bracket notation: where[code][equals]=value
     // The brackets should NOT be encoded, only the values should be encoded
     const tenantQuery = buildQueryString({
-      'where[slug][equals]': TENANT_SLUG,
+      'where[code][equals]': TENANT_SLUG,
       limit: 1,
     })
     
