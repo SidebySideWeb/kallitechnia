@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getImageUrl } from "@/lib/api"
+import React from "react"
+import React from "react"
 
 interface BlockRendererProps {
   blocks?: any[]
@@ -175,8 +177,11 @@ function ImageTextBlock({ block }: { block: any }) {
             )}
             {content && (
               <div className="text-lg leading-relaxed text-muted-foreground prose prose-lg max-w-none">
-                {/* Rich text content would need a proper renderer */}
-                <p>{JSON.stringify(content)}</p>
+                {renderLexicalContent(content) || (
+                  <div className="whitespace-pre-wrap">
+                    {extractTextFromLexical(content)}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -467,15 +472,26 @@ function RichTextBlock({ block }: { block: any }) {
 
     if (!content) return null
 
+    // Extract text content for display
+    const textContent = extractTextFromLexical(content)
+    
+    // If no text content found, don't render
+    if (!textContent.trim()) {
+      return null
+    }
+
     return (
-    <section className="py-20 bg-white fade-in-section opacity-0">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="prose prose-lg max-w-none">
-          {/* Rich text content would need a proper renderer like @payloadcms/richtext-slate */}
-          <p>{JSON.stringify(content)}</p>
+      <section className="py-20 bg-white fade-in-section opacity-0">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="prose prose-lg max-w-none">
+            {renderLexicalContent(content) || (
+              <div className="text-lg leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                {textContent}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
     )
   } catch (error) {
     console.error('[RichTextBlock] Error rendering:', error, block)
