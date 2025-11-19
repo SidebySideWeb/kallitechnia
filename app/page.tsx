@@ -54,6 +54,12 @@ export default function HomePage() {
     async function loadHomepage() {
       try {
         const homepageData = await fetchHomepage()
+        if (homepageData) {
+          console.log('[Homepage] Loaded from CMS:', homepageData)
+          console.log('[Homepage] Blocks:', homepageData.blocks)
+        } else {
+          console.warn('[Homepage] No homepage found in CMS (slug: "homepage")')
+        }
         setHomepage(homepageData)
       } catch (error) {
         console.error("Failed to load homepage:", error)
@@ -84,9 +90,17 @@ export default function HomePage() {
       <Navigation />
 
       {/* Render CMS Blocks if homepage exists */}
-      {!loadingHomepage && homepage?.blocks && homepage.blocks.length > 0 ? (
-        <BlockRenderer blocks={homepage.blocks} />
-      ) : (
+      {!loadingHomepage && homepage ? (
+        homepage.blocks && homepage.blocks.length > 0 ? (
+          <BlockRenderer blocks={homepage.blocks} />
+        ) : (
+          <div className="container mx-auto px-4 py-20">
+            <p className="text-muted-foreground">
+              Homepage loaded but no blocks found. Check CMS for page with slug "homepage".
+            </p>
+          </div>
+        )
+      ) : loadingHomepage ? null : (
         <>
           {/* Fallback: Static Hero Section */}
           <section className="relative overflow-hidden min-h-[600px] flex items-center">

@@ -48,9 +48,18 @@ export function CmsPage({ slug, fallback }: CmsPageProps) {
     async function loadPage() {
       try {
         const pageData = await fetchPage(slug)
-        setPage(pageData)
+        if (pageData) {
+          // Debug: Log page data structure
+          if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+            console.log(`[CmsPage] Loaded page "${slug}":`, pageData)
+            console.log(`[CmsPage] Blocks:`, pageData.blocks)
+          }
+          setPage(pageData)
+        } else {
+          console.warn(`[CmsPage] Page "${slug}" not found in CMS`)
+        }
       } catch (error) {
-        console.error("Failed to load page:", error)
+        console.error(`[CmsPage] Failed to load page "${slug}":`, error)
       } finally {
         setLoading(false)
       }

@@ -324,17 +324,37 @@ export async function fetchFooter(): Promise<Footer | null> {
 }
 
 /**
- * Get the image URL from a featured image field
+ * Get the image URL from a media field (handles Payload CMS Media objects)
+ * Supports: string URL, Media object with url property, or Media ID (number)
  */
-export function getImageUrl(featuredImage: Post['featuredImage'] | Page['featuredImage']): string | null {
-  if (!featuredImage) return null
+export function getImageUrl(media: any): string | null {
+  if (!media) return null
   
-  if (typeof featuredImage === 'string') {
-    return featuredImage
+  // If it's already a string URL, return it
+  if (typeof media === 'string') {
+    return media
   }
   
-  if (typeof featuredImage === 'object' && featuredImage.url) {
-    return featuredImage.url
+  // If it's a number (Media ID), we can't resolve it without another API call
+  // This shouldn't happen if depth=2 is used, but handle it gracefully
+  if (typeof media === 'number') {
+    console.warn('[getImageUrl] Received Media ID instead of populated Media object. Ensure depth=2 in API calls.')
+    return null
+  }
+  
+  // If it's an object, try to get the URL
+  if (typeof media === 'object') {
+    // Payload CMS Media object structure: { url: string, alt?: string, ... }
+    if (media.url) {
+      return media.url
+    }
+    
+    // Sometimes Payload returns nested structures
+    if (media.filename) {
+      // Payload might return filename, construct URL if needed
+      // This depends on your Payload config, but usually url is available
+      console.warn('[getImageUrl] Media object has filename but no url:', media)
+    }
   }
   
   return null

@@ -15,10 +15,18 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
     return null
   }
 
+  // Debug: Log blocks structure
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log('[BlockRenderer] Rendering blocks:', blocks)
+  }
+
   return (
     <>
       {blocks.map((block, index) => {
-        if (!block.blockType) return null
+        if (!block.blockType) {
+          console.warn(`[BlockRenderer] Block at index ${index} has no blockType:`, block)
+          return null
+        }
 
         switch (block.blockType) {
           case "hero":
