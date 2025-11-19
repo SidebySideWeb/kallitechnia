@@ -86,25 +86,44 @@ export function CmsPage({ slug, fallback }: CmsPageProps) {
     )
   }
 
-  return (
-    <div className="min-h-screen">
-      <Navigation />
-      {page?.blocks && page.blocks.length > 0 ? (
-        <BlockRenderer blocks={page.blocks} />
-      ) : (
-        fallback || (
-          <div className="container mx-auto px-4 py-20">
-            <h1 className="text-4xl md:text-5xl font-medium mb-6">
-              {page?.headline || page?.title || "Page"}
-            </h1>
-            {page?.title && page.title !== (page.headline || page.title) && (
-              <p className="text-xl text-muted-foreground mb-8">{page.title}</p>
-            )}
+  try {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        {page?.blocks && page.blocks.length > 0 ? (
+          <BlockRenderer blocks={page.blocks} />
+        ) : (
+          fallback || (
+            <div className="container mx-auto px-4 py-20">
+              <h1 className="text-4xl md:text-5xl font-medium mb-6">
+                {page?.headline || page?.title || "Page"}
+              </h1>
+              {page?.title && page.title !== (page.headline || page.title) && (
+                <p className="text-xl text-muted-foreground mb-8">{page.title}</p>
+              )}
+            </div>
+          )
+        )}
+        <Footer />
+      </div>
+    )
+  } catch (error) {
+    console.error('[CmsPage] Error rendering page:', error, { slug, page })
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="container mx-auto px-4 py-20">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h1 className="text-2xl font-bold text-red-800 mb-4">Error Loading Page</h1>
+            <p className="text-red-700 mb-4">
+              There was an error loading this page. Please check the CMS content.
+            </p>
+            {fallback && <div className="mt-4">{fallback}</div>}
           </div>
-        )
-      )}
-      <Footer />
-    </div>
-  )
+        </div>
+        <Footer />
+      </div>
+    )
+  }
 }
 

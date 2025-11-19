@@ -23,29 +23,50 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
   return (
     <>
       {blocks.map((block, index) => {
-        if (!block.blockType) {
-          console.warn(`[BlockRenderer] Block at index ${index} has no blockType:`, block)
-          return null
-        }
-
-        switch (block.blockType) {
-          case "hero":
-            return <HeroBlock key={block.id || index} block={block} />
-          case "imageText":
-            return <ImageTextBlock key={block.id || index} block={block} />
-          case "cardGrid":
-            return <CardGridBlock key={block.id || index} block={block} />
-          case "programs":
-            return <ProgramsBlock key={block.id || index} block={block} />
-          case "imageGallery":
-            return <ImageGalleryBlock key={block.id || index} block={block} />
-          case "sponsors":
-            return <SponsorsBlock key={block.id || index} block={block} />
-          case "richText":
-            return <RichTextBlock key={block.id || index} block={block} />
-          default:
-            console.warn(`Unknown block type: ${block.blockType}`)
+        try {
+          if (!block || typeof block !== 'object') {
+            console.warn(`[BlockRenderer] Invalid block at index ${index}:`, block)
             return null
+          }
+
+          if (!block.blockType) {
+            console.warn(`[BlockRenderer] Block at index ${index} has no blockType:`, block)
+            return null
+          }
+
+          const blockKey = block.id || `block-${index}`
+
+          switch (block.blockType) {
+            case "hero":
+              return <HeroBlock key={blockKey} block={block} />
+            case "imageText":
+              return <ImageTextBlock key={blockKey} block={block} />
+            case "cardGrid":
+              return <CardGridBlock key={blockKey} block={block} />
+            case "programs":
+              return <ProgramsBlock key={blockKey} block={block} />
+            case "imageGallery":
+              return <ImageGalleryBlock key={blockKey} block={block} />
+            case "sponsors":
+              return <SponsorsBlock key={blockKey} block={block} />
+            case "richText":
+              return <RichTextBlock key={blockKey} block={block} />
+            default:
+              console.warn(`[BlockRenderer] Unknown block type: ${block.blockType}`, block)
+              return null
+          }
+        } catch (error) {
+          console.error(`[BlockRenderer] Error rendering block at index ${index}:`, error, block)
+          // Return a placeholder instead of breaking the entire page
+          return (
+            <div key={`error-${index}`} className="container mx-auto px-4 py-8">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-800 text-sm">
+                  Error rendering block. Please check the CMS content.
+                </p>
+              </div>
+            </div>
+          )
         }
       })}
     </>
@@ -53,13 +74,19 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
 }
 
 function HeroBlock({ block }: { block: any }) {
-  const imageUrl = getImageUrl(block.backgroundImage)
-  const title = block.title || ""
-  const subtitle = block.subtitle || ""
-  const ctaLabel = block.ctaLabel
-  const ctaUrl = block.ctaUrl || "/"
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[HeroBlock] Invalid block data:', block)
+      return null
+    }
 
-  return (
+    const imageUrl = getImageUrl(block.backgroundImage)
+    const title = block.title || ""
+    const subtitle = block.subtitle || ""
+    const ctaLabel = block.ctaLabel
+    const ctaUrl = block.ctaUrl || "/"
+
+    return (
     <section className="relative overflow-hidden min-h-[600px] flex items-center">
       {imageUrl && (
         <div className="absolute inset-0">
@@ -96,10 +123,19 @@ function HeroBlock({ block }: { block: any }) {
         </div>
       </div>
     </section>
-  )
+    )
+  } catch (error) {
+    console.error('[HeroBlock] Error rendering:', error, block)
+    return null
+  }
 }
 
 function ImageTextBlock({ block }: { block: any }) {
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[ImageTextBlock] Invalid block data:', block)
+      return null
+    }
   const imageUrl = getImageUrl(block.image)
   const title = block.title || ""
   const subtitle = block.subtitle || ""
@@ -147,10 +183,19 @@ function ImageTextBlock({ block }: { block: any }) {
         </div>
       </div>
     </section>
-  )
+    )
+  } catch (error) {
+    console.error('[ImageTextBlock] Error rendering:', error, block)
+    return null
+  }
 }
 
 function CardGridBlock({ block }: { block: any }) {
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[CardGridBlock] Invalid block data:', block)
+      return null
+    }
   const title = block.title || ""
   const subtitle = block.subtitle || ""
   const cards = block.cards || []
@@ -215,10 +260,19 @@ function CardGridBlock({ block }: { block: any }) {
         </div>
       </div>
     </section>
-  )
+    )
+  } catch (error) {
+    console.error('[CardGridBlock] Error rendering:', error, block)
+    return null
+  }
 }
 
 function ProgramsBlock({ block }: { block: any }) {
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[ProgramsBlock] Invalid block data:', block)
+      return null
+    }
   const title = block.title || ""
   const subtitle = block.subtitle || ""
   const programs = block.programs || []
@@ -274,10 +328,19 @@ function ProgramsBlock({ block }: { block: any }) {
         </div>
       </div>
     </section>
-  )
+    )
+  } catch (error) {
+    console.error('[ProgramsBlock] Error rendering:', error, block)
+    return null
+  }
 }
 
 function ImageGalleryBlock({ block }: { block: any }) {
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[ImageGalleryBlock] Invalid block data:', block)
+      return null
+    }
   const title = block.title || ""
   const subtitle = block.subtitle || ""
   const images = block.images || []
@@ -327,10 +390,19 @@ function ImageGalleryBlock({ block }: { block: any }) {
         </div>
       </div>
     </section>
-  )
+    )
+  } catch (error) {
+    console.error('[ImageGalleryBlock] Error rendering:', error, block)
+    return null
+  }
 }
 
 function SponsorsBlock({ block }: { block: any }) {
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[SponsorsBlock] Invalid block data:', block)
+      return null
+    }
   const title = block.title || ""
   const subtitle = block.subtitle || ""
   const sponsors = block.sponsors || []
@@ -377,15 +449,25 @@ function SponsorsBlock({ block }: { block: any }) {
         </div>
       </div>
     </section>
-  )
+    )
+  } catch (error) {
+    console.error('[SponsorsBlock] Error rendering:', error, block)
+    return null
+  }
 }
 
 function RichTextBlock({ block }: { block: any }) {
-  const content = block.content
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[RichTextBlock] Invalid block data:', block)
+      return null
+    }
 
-  if (!content) return null
+    const content = block.content
 
-  return (
+    if (!content) return null
+
+    return (
     <section className="py-20 bg-white fade-in-section opacity-0">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="prose prose-lg max-w-none">
@@ -394,6 +476,10 @@ function RichTextBlock({ block }: { block: any }) {
         </div>
       </div>
     </section>
-  )
+    )
+  } catch (error) {
+    console.error('[RichTextBlock] Error rendering:', error, block)
+    return null
+  }
 }
 
