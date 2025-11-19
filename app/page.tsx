@@ -8,12 +8,15 @@ import { ArrowRight, Calendar, Sparkles } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
-import { fetchLatestPosts, getImageUrl, type Post } from "@/lib/api"
+import { fetchLatestPosts, fetchHomepage, getImageUrl, type Post, type Page } from "@/lib/api"
+import { BlockRenderer } from "@/components/blocks/BlockRenderer"
 
 export default function HomePage() {
   const observerRef = useRef<IntersectionObserver | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loadingPosts, setLoadingPosts] = useState(true)
+  const [homepage, setHomepage] = useState<Page | null>(null)
+  const [loadingHomepage, setLoadingHomepage] = useState(true)
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -28,10 +31,37 @@ export default function HomePage() {
       { threshold: 0.1, rootMargin: "50px" },
     )
 
-    const elements = document.querySelectorAll(".fade-in-section")
-    elements.forEach((el) => observerRef.current?.observe(el))
+    // Re-observe elements when homepage blocks are loaded
+    const observeElements = () => {
+      const elements = document.querySelectorAll(".fade-in-section")
+      elements.forEach((el) => observerRef.current?.observe(el))
+    }
 
-    return () => observerRef.current?.disconnect()
+    // Initial observation
+    observeElements()
+
+    // Re-observe after a short delay to catch dynamically rendered blocks
+    const timeoutId = setTimeout(observeElements, 100)
+
+    return () => {
+      clearTimeout(timeoutId)
+      observerRef.current?.disconnect()
+    }
+  }, [homepage])
+
+  // Fetch homepage from CMS
+  useEffect(() => {
+    async function loadHomepage() {
+      try {
+        const homepageData = await fetchHomepage()
+        setHomepage(homepageData)
+      } catch (error) {
+        console.error("Failed to load homepage:", error)
+      } finally {
+        setLoadingHomepage(false)
+      }
+    }
+    loadHomepage()
   }, [])
 
   // Fetch latest posts from CMS
@@ -53,8 +83,13 @@ export default function HomePage() {
     <div className="min-h-screen">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden min-h-[600px] flex items-center">
+      {/* Render CMS Blocks if homepage exists */}
+      {!loadingHomepage && homepage?.blocks && homepage.blocks.length > 0 ? (
+        <BlockRenderer blocks={homepage.blocks} />
+      ) : (
+        <>
+          {/* Fallback: Static Hero Section */}
+          <section className="relative overflow-hidden min-h-[600px] flex items-center">
         <div className="absolute inset-0">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/4E61F67B-0337-4478-8A77-8114550D1239%20%281%29-hJCE20zQfhEIr0Zo1h6Mk1Zl1U47lS.jpeg"
@@ -307,6 +342,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+        </>
+      )}
 
       {/* Νέα & Ανακοινώσεις */}
       <section className="py-20 bg-background fade-in-section opacity-0">

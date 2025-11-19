@@ -1,3 +1,6 @@
+"use client"
+
+import { CmsPage } from "@/components/CmsPage"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 
-export default function ContactPage() {
+function ContactPageFallback() {
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -196,4 +199,8 @@ export default function ContactPage() {
       <Footer />
     </div>
   )
+}
+
+export default function ContactPage() {
+  return <CmsPage slug="contact" fallback={<ContactPageFallback />} />
 }

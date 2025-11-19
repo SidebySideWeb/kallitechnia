@@ -1,10 +1,13 @@
-import { Navigation } from "@/components/navigation"
-import { Footer } from "@/components/footer"
+"use client"
+
+import { CmsPage } from "@/components/CmsPage"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
-import Image from "next/image"
+import { Navigation } from "@/components/navigation"
+import { Footer } from "@/components/footer"
 
-export default function ProgramsPage() {
+function ProgramsPageFallback() {
   const programs = [
     {
       id: 1,
@@ -273,4 +276,8 @@ export default function ProgramsPage() {
       <Footer />
     </div>
   )
+}
+
+export default function ProgramsPage() {
+  return <CmsPage slug="programs" fallback={<ProgramsPageFallback />} />
 }

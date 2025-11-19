@@ -1,3 +1,6 @@
+"use client"
+
+import { CmsPage } from "@/components/CmsPage"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -9,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { MapPin, Phone, Mail, Clock, FileText, Download } from "lucide-react"
 import Link from "next/link"
 
-export default function RegistrationPage() {
+function RegistrationPageFallback() {
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -291,4 +294,8 @@ export default function RegistrationPage() {
       <Footer />
     </div>
   )
+}
+
+export default function RegistrationPage() {
+  return <CmsPage slug="registration" fallback={<RegistrationPageFallback />} />
 }

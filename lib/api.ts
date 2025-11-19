@@ -31,6 +31,69 @@ export interface PostsResponse {
   nextPage: number | null
 }
 
+export interface Page {
+  id: string
+  title: string
+  slug: string
+  headline?: string
+  blocks?: any[]
+  featuredImage?: {
+    url?: string
+    alt?: string
+  } | string
+}
+
+export interface Header {
+  id: string
+  logo?: {
+    url?: string
+    alt?: string
+  } | string
+  logoText?: string
+  menu?: Array<{
+    label: string
+    link: string
+  }>
+  cta?: {
+    label: string
+    link: string
+  }
+}
+
+export interface Footer {
+  id: string
+  brand?: {
+    name?: string
+    tagline?: string
+  }
+  contact?: {
+    title?: string
+    email?: string
+    phone?: string
+  }
+  links?: {
+    title?: string
+    items?: Array<{
+      label: string
+      href: string
+    }>
+  }
+  copyright?: string
+}
+
+export interface PayloadResponse<T> {
+  docs: T[]
+  totalDocs: number
+  limit: number
+  totalPages: number
+  page: number
+  pagingCounter: number
+  hasPrevPage: boolean
+  hasNextPage: boolean
+  prevPage: number | null
+  nextPage: number | null
+}
+
 /**
  * Build Payload CMS query string
  * Payload CMS uses bracket notation which should NOT be URL encoded
@@ -107,9 +170,163 @@ export async function fetchLatestPosts(limit: number = 3): Promise<Post[]> {
 }
 
 /**
+ * Get tenant ID by code
+ */
+async function getTenantId(): Promise<string | null> {
+  try {
+    const tenantQuery = buildQueryString({
+      'where[code][equals]': TENANT_SLUG,
+      limit: 1,
+    })
+    
+    const response = await fetch(
+      `${PAYLOAD_URL}/api/tenants?${tenantQuery}`,
+      {
+        cache: 'no-store',
+      }
+    )
+
+    if (!response.ok) {
+      console.error('[API] Failed to fetch tenant:', response.status, response.statusText)
+      return null
+    }
+
+    const data = await response.json()
+    if (!data.docs || data.docs.length === 0) {
+      console.error('[API] Tenant not found:', TENANT_SLUG)
+      return null
+    }
+
+    return String(data.docs[0].id)
+  } catch (error) {
+    console.error('[API] Error fetching tenant:', error)
+    return null
+  }
+}
+
+/**
+ * Fetch homepage (slug = "homepage")
+ */
+export async function fetchHomepage(): Promise<Page | null> {
+  return fetchPage('homepage')
+}
+
+/**
+ * Fetch a page by slug
+ */
+export async function fetchPage(slug: string): Promise<Page | null> {
+  try {
+    const tenantId = await getTenantId()
+    if (!tenantId) {
+      console.error('[API] Cannot fetch page: tenant not found')
+      return null
+    }
+
+    const query = buildQueryString({
+      'where[slug][equals]': slug,
+      'where[tenant][equals]': tenantId,
+      limit: 1,
+      depth: 2,
+    })
+
+    const response = await fetch(
+      `${PAYLOAD_URL}/api/pages?${query}`,
+      {
+        cache: 'no-store',
+      }
+    )
+
+    if (!response.ok) {
+      console.error('[API] Failed to fetch page:', response.status, response.statusText)
+      return null
+    }
+
+    const data: PayloadResponse<Page> = await response.json()
+    return data.docs && data.docs.length > 0 ? data.docs[0] : null
+  } catch (error) {
+    console.error('[API] Error fetching page:', error)
+    return null
+  }
+}
+
+/**
+ * Fetch header for the tenant
+ */
+export async function fetchHeader(): Promise<Header | null> {
+  try {
+    const tenantId = await getTenantId()
+    if (!tenantId) {
+      console.error('[API] Cannot fetch header: tenant not found')
+      return null
+    }
+
+    const query = buildQueryString({
+      'where[tenant][equals]': tenantId,
+      limit: 1,
+      depth: 2,
+    })
+
+    const response = await fetch(
+      `${PAYLOAD_URL}/api/headers?${query}`,
+      {
+        cache: 'no-store',
+      }
+    )
+
+    if (!response.ok) {
+      console.error('[API] Failed to fetch header:', response.status, response.statusText)
+      return null
+    }
+
+    const data: PayloadResponse<Header> = await response.json()
+    return data.docs && data.docs.length > 0 ? data.docs[0] : null
+  } catch (error) {
+    console.error('[API] Error fetching header:', error)
+    return null
+  }
+}
+
+/**
+ * Fetch footer for the tenant
+ */
+export async function fetchFooter(): Promise<Footer | null> {
+  try {
+    const tenantId = await getTenantId()
+    if (!tenantId) {
+      console.error('[API] Cannot fetch footer: tenant not found')
+      return null
+    }
+
+    const query = buildQueryString({
+      'where[tenant][equals]': tenantId,
+      limit: 1,
+      depth: 2,
+    })
+
+    const response = await fetch(
+      `${PAYLOAD_URL}/api/footers?${query}`,
+      {
+        cache: 'no-store',
+      }
+    )
+
+    if (!response.ok) {
+      console.error('[API] Failed to fetch footer:', response.status, response.statusText)
+      return null
+    }
+
+    const data: PayloadResponse<Footer> = await response.json()
+    return data.docs && data.docs.length > 0 ? data.docs[0] : null
+  } catch (error) {
+    console.error('[API] Error fetching footer:', error)
+    return null
+  }
+}
+
+/**
  * Get the image URL from a featured image field
  */
-export function getImageUrl(featuredImage: Post['featuredImage']): string | null {
+export function getImageUrl(featuredImage: Post['featuredImage'] | Page['featuredImage']): string | null {
   if (!featuredImage) return null
   
   if (typeof featuredImage === 'string') {

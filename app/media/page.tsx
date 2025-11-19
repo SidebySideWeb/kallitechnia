@@ -1,9 +1,14 @@
+"use client"
+
+import { CmsPage } from "@/components/CmsPage"
+import { Navigation } from "@/components/navigation"
+import { Footer } from "@/components/footer"
 import Image from "next/image"
 import { Download, Facebook, Instagram } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
-export default function MediaPage() {
+function MediaPageFallback() {
   const logos = [
     {
       title: "Λογότυπο Κύριο",
@@ -51,6 +56,7 @@ export default function MediaPage() {
 
   return (
     <div className="min-h-screen">
+      <Navigation />
       <section className="relative bg-gradient-to-br from-accent via-primary to-secondary py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-10 left-1/4 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse" />
@@ -203,6 +209,11 @@ export default function MediaPage() {
           </div>
         </section>
       </div>
+      <Footer />
     </div>
   )
+}
+
+export default function MediaPage() {
+  return <CmsPage slug="media" fallback={<MediaPageFallback />} />
 }

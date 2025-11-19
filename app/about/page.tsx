@@ -3,10 +3,14 @@
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import Image from "next/image"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+import { fetchPage, type Page } from "@/lib/api"
+import { BlockRenderer } from "@/components/blocks/BlockRenderer"
 
 export default function AboutPage() {
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const [page, setPage] = useState<Page | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -14,23 +18,71 @@ export default function AboutPage() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("animate-in")
+            observerRef.current?.unobserve(entry.target)
           }
         })
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin: "50px" },
     )
 
-    const elements = document.querySelectorAll(".fade-in-section")
-    elements.forEach((el) => observerRef.current?.observe(el))
+    const observeElements = () => {
+      const elements = document.querySelectorAll(".fade-in-section")
+      elements.forEach((el) => observerRef.current?.observe(el))
+    }
 
-    return () => observerRef.current?.disconnect()
+    observeElements()
+
+    const timeoutId = setTimeout(observeElements, 100)
+
+    return () => {
+      clearTimeout(timeoutId)
+      observerRef.current?.disconnect()
+    }
+  }, [page])
+
+  useEffect(() => {
+    async function loadPage() {
+      try {
+        const pageData = await fetchPage("about")
+        setPage(pageData)
+      } catch (error) {
+        console.error("Failed to load page:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadPage()
   }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="container mx-auto px-4 py-20">
+          <div className="animate-pulse">
+            <div className="h-12 bg-muted rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-muted rounded w-1/2 mb-8"></div>
+            <div className="space-y-4">
+              <div className="h-4 bg-muted rounded"></div>
+              <div className="h-4 bg-muted rounded w-5/6"></div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen">
       <Navigation />
 
-      <section className="relative bg-gradient-to-br from-accent via-primary to-secondary py-24 overflow-hidden">
+      {page?.blocks && page.blocks.length > 0 ? (
+        <BlockRenderer blocks={page.blocks} />
+      ) : (
+        <>
+          {/* Fallback: Static content */}
+          <section className="relative bg-gradient-to-br from-accent via-primary to-secondary py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-10 right-10 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse" />
           <div
@@ -267,6 +319,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+        </>
+      )}
 
       <Footer />
     </div>

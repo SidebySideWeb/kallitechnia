@@ -1,7 +1,10 @@
+"use client"
+
+import { CmsPage } from "@/components/CmsPage"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 
-export default function TermsPage() {
+function TermsPageFallback() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -174,4 +177,8 @@ export default function TermsPage() {
       <Footer />
     </div>
   )
+}
+
+export default function TermsPage() {
+  return <CmsPage slug="terms" fallback={<TermsPageFallback />} />
 }
