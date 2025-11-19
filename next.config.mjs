@@ -1,5 +1,6 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
+import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -26,30 +27,38 @@ const nextConfig = {
   webpack: (config, { isServer, webpack }) => {
     const projectRoot = path.resolve(__dirname)
     
-    // Next.js automatically reads tsconfig.json paths, but we need to ensure
-    // webpack respects them. The key is to NOT override existing aliases that
-    // Next.js has already set up from tsconfig.json
-    
     // Ensure resolve object exists
     config.resolve = config.resolve || {}
     
-    // Only add @ alias if it doesn't exist (Next.js might have already set it)
+    // Use tsconfig-paths-webpack-plugin to automatically read tsconfig.json paths
+    // This ensures all @/* paths are correctly resolved
+    if (!config.resolve.plugins) {
+      config.resolve.plugins = []
+    }
+    
+    // Add tsconfig-paths plugin - this reads tsconfig.json and applies paths to webpack
+    config.resolve.plugins.push(
+      new TsconfigPathsPlugin({
+        configFile: path.join(projectRoot, 'tsconfig.json'),
+        extensions: config.resolve.extensions || ['.tsx', '.ts', '.jsx', '.js', '.json'],
+        baseUrl: projectRoot,
+      })
+    )
+    
+    // Also ensure @ alias is set as fallback
     if (!config.resolve.alias) {
       config.resolve.alias = {}
     }
     
-    // Set @ alias to project root - this is the base for all @/* imports
-    // Next.js should handle @/components/* automatically via tsconfig.json paths
     if (!config.resolve.alias['@']) {
       config.resolve.alias['@'] = projectRoot
     }
     
-    // Ensure modules array includes project root for fallback resolution
+    // Ensure modules array includes project root
     if (!Array.isArray(config.resolve.modules)) {
       config.resolve.modules = []
     }
     
-    // Add project root to modules if not already present
     const hasProjectRoot = config.resolve.modules.some((m) => {
       if (typeof m === 'string') {
         try {
@@ -69,7 +78,7 @@ const nextConfig = {
       ]
     }
     
-    // Ensure extensions include TypeScript/JavaScript
+    // Ensure extensions
     if (!Array.isArray(config.resolve.extensions)) {
       config.resolve.extensions = []
     }
@@ -86,9 +95,9 @@ const nextConfig = {
       ]
     }
     
-    // Debug logging to see what Next.js has already configured
+    // Debug logging
     console.log('[Webpack] Project Root:', projectRoot)
-    console.log('[Webpack] Existing aliases:', Object.keys(config.resolve.alias || {}))
+    console.log('[Webpack] Using tsconfig-paths-webpack-plugin')
     console.log('[Webpack] Alias @:', config.resolve.alias['@'])
     console.log('[Webpack] Modules:', config.resolve.modules.slice(0, 3))
     
