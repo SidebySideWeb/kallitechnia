@@ -85,9 +85,9 @@ function HeroBlock({ block }: { block: any }) {
 
     const imageUrl = getImageUrl(block.backgroundImage)
     const title = block.title || ""
-    const subtitle = block.subtitle || ""
-    const ctaLabel = block.ctaLabel
-    const ctaUrl = block.ctaUrl || "/"
+    const content = block.content
+    const buttonLabel = block.buttonLabel || block.ctaLabel
+    const buttonUrl = block.buttonUrl || block.ctaUrl || "/"
 
     return (
     <section className="relative overflow-hidden min-h-[600px] flex items-center">
@@ -113,14 +113,22 @@ function HeroBlock({ block }: { block: any }) {
               {title}
             </h1>
           )}
-          {subtitle && <p className="text-xl mb-6">{subtitle}</p>}
-          {ctaLabel && (
+          {content && (
+            <div className="text-xl mb-6 prose prose-invert max-w-none">
+              {renderLexicalContent(content) || (
+                <div className="whitespace-pre-wrap">
+                  {extractTextFromLexical(content)}
+                </div>
+              )}
+            </div>
+          )}
+          {buttonLabel && (
             <Button
               size="lg"
               className="bg-secondary text-white hover:bg-secondary/90 hover:scale-105 transition-all text-lg px-8 shadow-lg"
               asChild
             >
-              <Link href={ctaUrl}>{ctaLabel}</Link>
+              <Link href={buttonUrl}>{buttonLabel}</Link>
             </Button>
           )}
         </div>
@@ -213,9 +221,10 @@ function ImageTextBlock({ block }: { block: any }) {
     }
   const imageUrl = getImageUrl(block.image)
   const title = block.title || ""
-  const subtitle = block.subtitle || ""
   const content = block.content
   const imagePosition = block.imagePosition || "left"
+  const buttonLabel = block.buttonLabel
+  const buttonUrl = block.buttonUrl || "/"
 
   return (
     <section className="py-20 bg-white fade-in-section opacity-0">
@@ -243,19 +252,23 @@ function ImageTextBlock({ block }: { block: any }) {
                 {title}
               </h2>
             )}
-            {subtitle && (
-              <p className="text-lg leading-relaxed text-muted-foreground mb-4">
-                {subtitle}
-              </p>
-            )}
             {content && (
-              <div className="text-lg leading-relaxed text-muted-foreground prose prose-lg max-w-none">
+              <div className="text-lg leading-relaxed text-muted-foreground prose prose-lg max-w-none mb-4">
                 {renderLexicalContent(content) || (
                   <div className="whitespace-pre-wrap">
                     {extractTextFromLexical(content)}
                   </div>
                 )}
               </div>
+            )}
+            {buttonLabel && (
+              <Button
+                variant="outline"
+                className="mt-4"
+                asChild
+              >
+                <Link href={buttonUrl}>{buttonLabel}</Link>
+              </Button>
             )}
           </div>
         </div>
@@ -275,8 +288,10 @@ function CardGridBlock({ block }: { block: any }) {
       return null
     }
   const title = block.title || ""
-  const subtitle = block.subtitle || ""
+  const content = block.content
   const cards = block.cards || []
+  const buttonLabel = block.buttonLabel
+  const buttonUrl = block.buttonUrl || "/"
 
   return (
     <section className="py-20 bg-background fade-in-section opacity-0">
@@ -317,6 +332,15 @@ function CardGridBlock({ block }: { block: any }) {
                   {card.title && (
                     <h3 className="text-2xl font-medium mb-3">{card.title}</h3>
                   )}
+                  {card.content && (
+                    <div className="text-muted-foreground leading-relaxed mb-4 prose prose-sm">
+                      {renderLexicalContent(card.content) || (
+                        <div className="whitespace-pre-wrap">
+                          {extractTextFromLexical(card.content)}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {card.description && (
                     <p className="text-muted-foreground leading-relaxed mb-4">
                       {card.description}
@@ -336,6 +360,17 @@ function CardGridBlock({ block }: { block: any }) {
             )
           })}
         </div>
+        {buttonLabel && (
+          <div className="text-center mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+            >
+              <Link href={buttonUrl}>{buttonLabel}</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </section>
     )
@@ -352,8 +387,10 @@ function ProgramsBlock({ block }: { block: any }) {
       return null
     }
   const title = block.title || ""
-  const subtitle = block.subtitle || ""
+  const content = block.content
   const programs = block.programs || []
+  const buttonLabel = block.buttonLabel
+  const buttonUrl = block.buttonUrl || "/"
 
   return (
     <section className="py-20 bg-background fade-in-section opacity-0">
@@ -363,10 +400,14 @@ function ProgramsBlock({ block }: { block: any }) {
             {title}
           </h2>
         )}
-        {subtitle && (
-          <p className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
-            {subtitle}
-          </p>
+        {content && (
+          <div className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto prose prose-lg">
+            {renderLexicalContent(content) || (
+              <div className="whitespace-pre-wrap">
+                {extractTextFromLexical(content)}
+              </div>
+            )}
+          </div>
         )}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {programs.map((program: any, index: number) => {
@@ -394,6 +435,15 @@ function ProgramsBlock({ block }: { block: any }) {
                   {program.title && (
                     <h3 className="text-2xl font-medium mb-3">{program.title}</h3>
                   )}
+                  {program.content && (
+                    <div className="text-muted-foreground leading-relaxed mb-4 prose prose-sm">
+                      {renderLexicalContent(program.content) || (
+                        <div className="whitespace-pre-wrap">
+                          {extractTextFromLexical(program.content)}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {program.description && (
                     <p className="text-muted-foreground leading-relaxed mb-4">
                       {program.description}
@@ -404,6 +454,17 @@ function ProgramsBlock({ block }: { block: any }) {
             )
           })}
         </div>
+        {buttonLabel && (
+          <div className="text-center mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+            >
+              <Link href={buttonUrl}>{buttonLabel}</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </section>
     )
@@ -420,8 +481,10 @@ function ImageGalleryBlock({ block }: { block: any }) {
       return null
     }
   const title = block.title || ""
-  const subtitle = block.subtitle || ""
+  const content = block.content
   const images = block.images || []
+  const buttonLabel = block.buttonLabel
+  const buttonUrl = block.buttonUrl || "/"
 
   return (
     <section className="py-20 bg-white fade-in-section opacity-0">
@@ -431,10 +494,14 @@ function ImageGalleryBlock({ block }: { block: any }) {
             {title}
           </h2>
         )}
-        {subtitle && (
-          <p className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
-            {subtitle}
-          </p>
+        {content && (
+          <div className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto prose prose-lg">
+            {renderLexicalContent(content) || (
+              <div className="whitespace-pre-wrap">
+                {extractTextFromLexical(content)}
+              </div>
+            )}
+          </div>
         )}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {images.map((image: any, index: number) => {
@@ -471,6 +538,17 @@ function ImageGalleryBlock({ block }: { block: any }) {
             )
           })}
         </div>
+        {buttonLabel && (
+          <div className="text-center mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+            >
+              <Link href={buttonUrl}>{buttonLabel}</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </section>
     )
@@ -487,8 +565,10 @@ function SponsorsBlock({ block }: { block: any }) {
       return null
     }
   const title = block.title || ""
-  const subtitle = block.subtitle || ""
+  const content = block.content
   const sponsors = block.sponsors || []
+  const buttonLabel = block.buttonLabel
+  const buttonUrl = block.buttonUrl || "/"
 
   return (
     <section className="py-20 bg-white fade-in-section opacity-0">
@@ -498,10 +578,14 @@ function SponsorsBlock({ block }: { block: any }) {
             {title}
           </h2>
         )}
-        {subtitle && (
-          <p className="text-center text-muted-foreground text-lg mb-12">
-            {subtitle}
-          </p>
+        {content && (
+          <div className="text-center text-muted-foreground text-lg mb-12 prose prose-lg max-w-2xl mx-auto">
+            {renderLexicalContent(content) || (
+              <div className="whitespace-pre-wrap">
+                {extractTextFromLexical(content)}
+              </div>
+            )}
+          </div>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center max-w-5xl mx-auto">
           {sponsors.map((sponsor: any, index: number) => {
@@ -545,6 +629,17 @@ function SponsorsBlock({ block }: { block: any }) {
             )
           })}
         </div>
+        {buttonLabel && (
+          <div className="text-center mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+            >
+              <Link href={buttonUrl}>{buttonLabel}</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </section>
     )
@@ -600,7 +695,7 @@ function CtaBannerBlock({ block }: { block: any }) {
     }
 
     const title = block.title || ""
-    const description = block.description || ""
+    const content = block.content || block.description
     const buttonLabel = block.buttonLabel
     const buttonUrl = block.buttonUrl || "/"
     const backgroundGradient = block.backgroundGradient || "purple-orange"
@@ -628,10 +723,14 @@ function CtaBannerBlock({ block }: { block: any }) {
               <h2 className="text-4xl md:text-5xl font-medium mb-6 text-balance animate-fade-in-up leading-relaxed">
                 {title}
               </h2>
-              {description && (
-                <p className="text-xl mb-8 max-w-2xl mx-auto leading-relaxed">
-                  {description}
-                </p>
+              {content && (
+                <div className="text-xl mb-8 max-w-2xl mx-auto leading-relaxed prose prose-invert">
+                  {renderLexicalContent(content) || (
+                    <div className="whitespace-pre-wrap">
+                      {extractTextFromLexical(content)}
+                    </div>
+                  )}
+                </div>
               )}
               {buttonLabel && (
                 <Button
