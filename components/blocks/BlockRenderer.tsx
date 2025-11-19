@@ -5,8 +5,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getImageUrl } from "@/lib/api"
-import React from "react"
-import React from "react"
 
 interface BlockRendererProps {
   blocks?: any[]
@@ -130,6 +128,78 @@ function HeroBlock({ block }: { block: any }) {
     console.error('[HeroBlock] Error rendering:', error, block)
     return null
   }
+}
+
+/**
+ * Extract text content from Lexical editor JSON structure
+ */
+function extractTextFromLexical(content: any): string {
+  if (!content || typeof content !== 'object') {
+    return ''
+  }
+
+  // Handle Lexical editor format
+  if (content.root && content.root.children) {
+    const extractText = (node: any): string => {
+      if (!node) return ''
+      
+      // If node has text property, return it
+      if (node.text) {
+        return node.text
+      }
+      
+      // If node has children, recursively extract text
+      if (node.children && Array.isArray(node.children)) {
+        return node.children.map(extractText).join('')
+      }
+      
+      return ''
+    }
+    
+    return content.root.children.map(extractText).join('\n\n')
+  }
+  
+  // Fallback: if it's already a string, return it
+  if (typeof content === 'string') {
+    return content
+  }
+  
+  return ''
+}
+
+/**
+ * Render paragraphs from Lexical content
+ */
+function renderLexicalContent(content: any) {
+  if (!content || typeof content !== 'object') {
+    return null
+  }
+
+  if (content.root && content.root.children) {
+    return (
+      <>
+        {content.root.children.map((node: any, index: number) => {
+          if (node.type === 'paragraph' && node.children) {
+            const text = node.children
+              .filter((child: any) => child.type === 'text' && child.text)
+              .map((child: any) => child.text)
+              .join('')
+            
+            if (text) {
+              return (
+                <p key={index} className="mb-4 text-lg leading-relaxed text-muted-foreground">
+                  {text}
+                </p>
+              )
+            }
+          }
+          return null
+        })}
+      </>
+    )
+  }
+  
+  return null
 }
 
 function ImageTextBlock({ block }: { block: any }) {
