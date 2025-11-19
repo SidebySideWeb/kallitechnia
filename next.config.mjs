@@ -1,6 +1,6 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
+import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -20,39 +20,29 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
-  // Explicitly disable Turbopack to force webpack usage
-  experimental: {
-    turbo: false,
-  },
   webpack: (config, { isServer, webpack }) => {
     const projectRoot = path.resolve(__dirname)
     
+    // Read tsconfig.json to get path mappings
+    const tsconfigPath = path.join(projectRoot, 'tsconfig.json')
+    let tsconfigPaths = {}
+    
+    try {
+      const tsconfigContent = fs.readFileSync(tsconfigPath, 'utf-8')
+      const tsconfig = JSON.parse(tsconfigContent)
+      tsconfigPaths = tsconfig.compilerOptions?.paths || {}
+    } catch (error) {
+      console.warn('[Webpack] Could not read tsconfig.json:', error.message)
+    }
+    
     // Ensure resolve object exists
     config.resolve = config.resolve || {}
+    config.resolve.alias = config.resolve.alias || {}
     
-    // Use tsconfig-paths-webpack-plugin to automatically read tsconfig.json paths
-    // This ensures all @/* paths are correctly resolved
-    if (!config.resolve.plugins) {
-      config.resolve.plugins = []
-    }
-    
-    // Add tsconfig-paths plugin - this reads tsconfig.json and applies paths to webpack
-    config.resolve.plugins.push(
-      new TsconfigPathsPlugin({
-        configFile: path.join(projectRoot, 'tsconfig.json'),
-        extensions: config.resolve.extensions || ['.tsx', '.ts', '.jsx', '.js', '.json'],
-        baseUrl: projectRoot,
-      })
-    )
-    
-    // Also ensure @ alias is set as fallback
-    if (!config.resolve.alias) {
-      config.resolve.alias = {}
-    }
-    
-    if (!config.resolve.alias['@']) {
-      config.resolve.alias['@'] = projectRoot
-    }
+    // CRITICAL: Only set the base @ alias to project root
+    // Webpack will resolve @/components/navigation as projectRoot/components/navigation
+    // Setting nested aliases like @/components can interfere with resolution
+    config.resolve.alias['@'] = projectRoot
     
     // Ensure modules array includes project root
     if (!Array.isArray(config.resolve.modules)) {
@@ -97,9 +87,9 @@ const nextConfig = {
     
     // Debug logging
     console.log('[Webpack] Project Root:', projectRoot)
-    console.log('[Webpack] Using tsconfig-paths-webpack-plugin')
-    console.log('[Webpack] Alias @:', config.resolve.alias['@'])
-    console.log('[Webpack] Modules:', config.resolve.modules.slice(0, 3))
+    console.log('[Webpack] Aliases:', Object.keys(config.resolve.alias).filter(k => k.startsWith('@')))
+    console.log('[Webpack] @/components alias:', config.resolve.alias['@/components'])
+    console.log('[Webpack] @ alias:', config.resolve.alias['@'])
     
     return config
   },
