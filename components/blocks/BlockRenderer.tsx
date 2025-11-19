@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { ArrowRight } from "lucide-react"
 import { getImageUrl } from "@/lib/api"
 
 interface BlockRendererProps {
@@ -51,6 +52,8 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
               return <SponsorsBlock key={blockKey} block={block} />
             case "richText":
               return <RichTextBlock key={blockKey} block={block} />
+            case "ctaBanner":
+              return <CtaBannerBlock key={blockKey} block={block} />
             default:
               console.warn(`[BlockRenderer] Unknown block type: ${block.blockType}`, block)
               return null
@@ -450,12 +453,17 @@ function ImageGalleryBlock({ block }: { block: any }) {
                   loading="lazy"
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
-                {image.caption && (
+                {(image.title || image.caption) && (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                     <div className="absolute bottom-6 left-6 text-white">
-                      <h3 className="text-2xl font-medium mb-2 leading-relaxed">
-                        {image.caption}
-                      </h3>
+                      {image.title && (
+                        <h3 className="text-2xl font-medium mb-2 leading-relaxed">
+                          {image.title}
+                        </h3>
+                      )}
+                      {image.caption && (
+                        <p className="text-sm">{image.caption}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -497,24 +505,39 @@ function SponsorsBlock({ block }: { block: any }) {
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center max-w-5xl mx-auto">
           {sponsors.map((sponsor: any, index: number) => {
-            const logoUrl = getImageUrl(sponsor.logo)
+            const logoUrl = getImageUrl(sponsor.image || sponsor.logo)
+            const sponsorName = sponsor.title || sponsor.name
+            const sponsorUrl = sponsor.url
+            
             return (
               <div
                 key={sponsor.id || index}
                 className="bg-white rounded-xl p-6 flex items-center justify-center h-32 hover:shadow-xl hover:scale-110 transition-all duration-300 border-2 border-transparent hover:border-primary cursor-pointer"
               >
                 {logoUrl ? (
-                  <Image
-                    src={logoUrl}
-                    alt={sponsor.name || "Sponsor"}
-                    width={120}
-                    height={80}
-                    className="object-contain"
-                  />
+                  sponsorUrl ? (
+                    <Link href={sponsorUrl} target="_blank" rel="noopener noreferrer" className="w-full h-full flex items-center justify-center">
+                      <Image
+                        src={logoUrl}
+                        alt={sponsorName || "Sponsor"}
+                        width={120}
+                        height={80}
+                        className="object-contain"
+                      />
+                    </Link>
+                  ) : (
+                    <Image
+                      src={logoUrl}
+                      alt={sponsorName || "Sponsor"}
+                      width={120}
+                      height={80}
+                      className="object-contain"
+                    />
+                  )
                 ) : (
                   <div className="text-center">
                     <p className="text-sm font-semibold text-muted-foreground">
-                      {sponsor.name || `Sponsor ${index + 1}`}
+                      {sponsorName || `Sponsor ${index + 1}`}
                     </p>
                   </div>
                 )}
@@ -565,6 +588,70 @@ function RichTextBlock({ block }: { block: any }) {
     )
   } catch (error) {
     console.error('[RichTextBlock] Error rendering:', error, block)
+    return null
+  }
+}
+
+function CtaBannerBlock({ block }: { block: any }) {
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[CtaBannerBlock] Invalid block data:', block)
+      return null
+    }
+
+    const title = block.title || ""
+    const description = block.description || ""
+    const buttonLabel = block.buttonLabel
+    const buttonUrl = block.buttonUrl || "/"
+    const backgroundGradient = block.backgroundGradient || "purple-orange"
+
+    if (!title) return null
+
+    const gradientClass = backgroundGradient === 'purple-orange' 
+      ? 'gradient-purple-orange' 
+      : backgroundGradient === 'primary-secondary'
+      ? 'bg-gradient-to-r from-primary via-secondary to-accent'
+      : 'bg-gradient-to-r from-accent via-primary to-secondary'
+
+    return (
+      <section className="py-20 bg-background fade-in-section opacity-0">
+        <div className="container mx-auto px-4">
+          <div className={`${gradientClass} rounded-3xl p-12 md:p-16 text-center text-white relative overflow-hidden hover:scale-[1.02] transition-transform duration-500`}>
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse" />
+              <div
+                className="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full blur-3xl animate-pulse"
+                style={{ animationDelay: "1s" }}
+              />
+            </div>
+            <div className="relative z-10">
+              <h2 className="text-4xl md:text-5xl font-medium mb-6 text-balance animate-fade-in-up leading-relaxed">
+                {title}
+              </h2>
+              {description && (
+                <p className="text-xl mb-8 max-w-2xl mx-auto leading-relaxed">
+                  {description}
+                </p>
+              )}
+              {buttonLabel && (
+                <Button
+                  size="lg"
+                  className="bg-white text-primary hover:bg-white/90 hover:scale-110 transition-all duration-300 text-lg px-8 shadow-2xl"
+                  asChild
+                >
+                  <Link href={buttonUrl} className="flex items-center gap-2">
+                    {buttonLabel}
+                    <ArrowRight className="h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  } catch (error) {
+    console.error('[CtaBannerBlock] Error rendering:', error, block)
     return null
   }
 }
