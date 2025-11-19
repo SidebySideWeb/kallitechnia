@@ -32,20 +32,39 @@ export interface PostsResponse {
 }
 
 /**
+ * Build Payload CMS query string
+ * Payload CMS uses bracket notation which should NOT be URL encoded
+ */
+function buildQueryString(params: Record<string, string | number>): string {
+  return Object.entries(params)
+    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
+    .join('&')
+}
+
+/**
  * Fetch latest posts from CMS
  */
 export async function fetchLatestPosts(limit: number = 3): Promise<Post[]> {
   try {
     // First, get the tenant ID by slug
+    // Payload CMS uses bracket notation: where[slug][equals]=value
+    // The brackets should NOT be encoded, only the values should be encoded
+    const tenantQuery = buildQueryString({
+      'where[slug][equals]': TENANT_SLUG,
+      limit: 1,
+    })
+    
     const tenantResponse = await fetch(
-      `${PAYLOAD_URL}/api/tenants?where[slug][equals]=${TENANT_SLUG}&limit=1`,
+      `${PAYLOAD_URL}/api/tenants?${tenantQuery}`,
       {
         cache: 'no-store', // Always fetch fresh data
       }
     )
 
     if (!tenantResponse.ok) {
-      console.error('Failed to fetch tenant:', tenantResponse.statusText)
+      console.error('Failed to fetch tenant:', tenantResponse.status, tenantResponse.statusText)
+      const errorText = await tenantResponse.text().catch(() => '')
+      console.error('Error details:', errorText)
       return []
     }
 
@@ -58,15 +77,24 @@ export async function fetchLatestPosts(limit: number = 3): Promise<Post[]> {
     const tenantId = tenantData.docs[0].id
 
     // Fetch posts for this tenant
+    const postsQuery = buildQueryString({
+      'where[tenant][equals]': tenantId,
+      limit: limit,
+      sort: '-publishedAt',
+      depth: 1,
+    })
+    
     const postsResponse = await fetch(
-      `${PAYLOAD_URL}/api/posts?where[tenant][equals]=${tenantId}&limit=${limit}&sort=-publishedAt&depth=1`,
+      `${PAYLOAD_URL}/api/posts?${postsQuery}`,
       {
         cache: 'no-store', // Always fetch fresh data
       }
     )
 
     if (!postsResponse.ok) {
-      console.error('Failed to fetch posts:', postsResponse.statusText)
+      console.error('Failed to fetch posts:', postsResponse.status, postsResponse.statusText)
+      const errorText = await postsResponse.text().catch(() => '')
+      console.error('Error details:', errorText)
       return []
     }
 
