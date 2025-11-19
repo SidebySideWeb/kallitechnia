@@ -1,5 +1,6 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -19,33 +20,34 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
+  // Explicitly disable Turbopack to force webpack usage
+  experimental: {
+    turbo: false,
+  },
   webpack: (config, { isServer, webpack }) => {
-    // Explicitly resolve path aliases for Vercel compatibility
     const projectRoot = path.resolve(__dirname)
     
-    // CRITICAL: Force webpack to use our resolve configuration
-    // Override any existing resolve config
+    // CRITICAL: Ensure resolve object exists
     config.resolve = config.resolve || {}
+    config.resolve.alias = config.resolve.alias || {}
     
-    // Set alias - MUST be absolute path, override completely
-    config.resolve.alias = {
-      ...(config.resolve.alias || {}),
-      '@': projectRoot,
-      '@/components': path.join(projectRoot, 'components'),
-      '@/lib': path.join(projectRoot, 'lib'),
-      '@/app': path.join(projectRoot, 'app'),
+    // Set aliases with absolute paths - these MUST be set
+    config.resolve.alias['@'] = projectRoot
+    config.resolve.alias['@/components'] = path.join(projectRoot, 'components')
+    config.resolve.alias['@/lib'] = path.join(projectRoot, 'lib')
+    config.resolve.alias['@/app'] = path.join(projectRoot, 'app')
+    
+    // Force modules array
+    if (!Array.isArray(config.resolve.modules)) {
+      config.resolve.modules = []
     }
     
-    // Force modules resolution - project root MUST be first
-    const existingModules = Array.isArray(config.resolve.modules) 
-      ? config.resolve.modules 
-      : []
-    
-    // Filter out projectRoot if it exists
-    const filteredModules = existingModules.filter((m) => {
+    // Ensure project root is first in modules
+    const existingModules = config.resolve.modules.filter((m) => {
       if (typeof m === 'string') {
         try {
-          return path.resolve(m) !== projectRoot
+          const resolved = path.resolve(m)
+          return resolved !== projectRoot && resolved !== path.resolve(projectRoot)
         } catch {
           return true
         }
@@ -53,33 +55,53 @@ const nextConfig = {
       return true
     })
     
-    // Set modules with project root first
     config.resolve.modules = [
       projectRoot,
-      ...filteredModules,
+      ...existingModules,
       'node_modules',
     ]
     
-    // Ensure extensions are set correctly
-    const defaultExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
-    const existingExtensions = Array.isArray(config.resolve.extensions)
-      ? config.resolve.extensions
-      : []
+    // Ensure extensions
+    if (!Array.isArray(config.resolve.extensions)) {
+      config.resolve.extensions = []
+    }
     
-    const uniqueExtensions = [
-      ...defaultExtensions,
-      ...existingExtensions.filter((ext) => !defaultExtensions.includes(ext)),
+    const requiredExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
+    const existingExtensions = config.resolve.extensions.filter(
+      (ext) => !requiredExtensions.includes(ext)
+    )
+    
+    config.resolve.extensions = [
+      ...requiredExtensions,
+      ...existingExtensions,
     ]
     
-    config.resolve.extensions = uniqueExtensions
-    
-    // Force symlinks to be resolved
+    // Disable symlinks
     config.resolve.symlinks = false
     
-    // Log for debugging (works in Vercel build logs)
+    // Add a custom resolver plugin to force resolution
+    config.plugins = config.plugins || []
+    
+    // Use NormalModuleReplacementPlugin to intercept and fix imports
+    const componentAliases = {
+      '@/components/navigation': path.join(projectRoot, 'components', 'navigation.tsx'),
+      '@/components/footer': path.join(projectRoot, 'components', 'footer.tsx'),
+    }
+    
+    Object.entries(componentAliases).forEach(([alias, realPath]) => {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(
+          new RegExp(`^${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+          realPath
+        )
+      )
+    })
+    
+    // Debug logging
     console.log('[Webpack] Project Root:', projectRoot)
     console.log('[Webpack] Alias @:', config.resolve.alias['@'])
-    console.log('[Webpack] Components alias:', config.resolve.alias['@/components'])
+    console.log('[Webpack] Alias @/components:', config.resolve.alias['@/components'])
+    console.log('[Webpack] Components path exists:', fs.existsSync(path.join(projectRoot, 'components', 'navigation.tsx')))
     
     return config
   },
