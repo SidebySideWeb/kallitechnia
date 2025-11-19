@@ -279,5 +279,6 @@ function ProgramsPageFallback() {
 }
 
 export default function ProgramsPage() {
-  return <CmsPage slug="programs" fallback={<ProgramsPageFallback />} />
+  // Always show static content - CMS integration can be enabled later
+  return <ProgramsPageFallback />
 }

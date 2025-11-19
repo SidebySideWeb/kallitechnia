@@ -89,18 +89,10 @@ export default function HomePage() {
     <div className="min-h-screen">
       <Navigation />
 
-      {/* Render CMS Blocks if homepage exists */}
-      {!loadingHomepage && homepage ? (
-        homepage.blocks && homepage.blocks.length > 0 ? (
-          <BlockRenderer blocks={homepage.blocks} />
-        ) : (
-          <div className="container mx-auto px-4 py-20">
-            <p className="text-muted-foreground">
-              Homepage loaded but no blocks found. Check CMS for page with slug "homepage".
-            </p>
-          </div>
-        )
-      ) : loadingHomepage ? null : (
+      {/* Render CMS Blocks if homepage exists and has valid blocks, otherwise use static content */}
+      {!loadingHomepage && homepage?.blocks && Array.isArray(homepage.blocks) && homepage.blocks.length > 0 ? (
+        <BlockRenderer blocks={homepage.blocks} />
+      ) : (
         <>
           {/* Fallback: Static Hero Section */}
           <section className="relative overflow-hidden min-h-[600px] flex items-center">

@@ -215,5 +215,6 @@ function MediaPageFallback() {
 }
 
 export default function MediaPage() {
-  return <CmsPage slug="media" fallback={<MediaPageFallback />} />
+  // Always show static content - CMS integration can be enabled later
+  return <MediaPageFallback />
 }

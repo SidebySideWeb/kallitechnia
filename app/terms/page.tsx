@@ -180,5 +180,6 @@ function TermsPageFallback() {
 }
 
 export default function TermsPage() {
-  return <CmsPage slug="terms" fallback={<TermsPageFallback />} />
+  // Always show static content - CMS integration can be enabled later
+  return <TermsPageFallback />
 }

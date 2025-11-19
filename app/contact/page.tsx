@@ -202,5 +202,6 @@ function ContactPageFallback() {
 }
 
 export default function ContactPage() {
-  return <CmsPage slug="contact" fallback={<ContactPageFallback />} />
+  // Always show static content - CMS integration can be enabled later
+  return <ContactPageFallback />
 }

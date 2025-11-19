@@ -297,5 +297,6 @@ function RegistrationPageFallback() {
 }
 
 export default function RegistrationPage() {
-  return <CmsPage slug="registration" fallback={<RegistrationPageFallback />} />
+  // Always show static content - CMS integration can be enabled later
+  return <RegistrationPageFallback />
 }

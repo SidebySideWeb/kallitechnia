@@ -87,12 +87,16 @@ export function CmsPage({ slug, fallback }: CmsPageProps) {
   }
 
   try {
+    // Only use CMS content if it exists and has valid blocks
+    const hasValidCmsContent = page?.blocks && Array.isArray(page.blocks) && page.blocks.length > 0
+    
     return (
       <div className="min-h-screen">
         <Navigation />
-        {page?.blocks && page.blocks.length > 0 ? (
+        {hasValidCmsContent ? (
           <BlockRenderer blocks={page.blocks} />
         ) : (
+          // Always show fallback if CMS content is not available or invalid
           fallback || (
             <div className="container mx-auto px-4 py-20">
               <h1 className="text-4xl md:text-5xl font-medium mb-6">

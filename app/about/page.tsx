@@ -77,11 +77,11 @@ export default function AboutPage() {
     <div className="min-h-screen">
       <Navigation />
 
-      {page?.blocks && page.blocks.length > 0 ? (
+      {page?.blocks && Array.isArray(page.blocks) && page.blocks.length > 0 ? (
         <BlockRenderer blocks={page.blocks} />
       ) : (
         <>
-          {/* Fallback: Static content */}
+          {/* Static content - shown when CMS content is not available or invalid */}
           <section className="relative bg-gradient-to-br from-accent via-primary to-secondary py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-10 right-10 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse" />
