@@ -4,8 +4,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, MapPin, Phone, Mail, Clock } from "lucide-react"
 import { getImageUrl } from "@/lib/api"
+import { DEFAULT_IMAGES, DEFAULT_CONTENT } from "@/lib/defaults"
+import { ContactDetailsBlock as ContactDetailsBlockComponent } from "./ContactDetailsBlock"
 
 interface BlockRendererProps {
   blocks?: any[]
@@ -54,6 +56,8 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
               return <RichTextBlock key={blockKey} block={block} />
             case "ctaBanner":
               return <CtaBannerBlock key={blockKey} block={block} />
+            case "contactDetails":
+              return <ContactDetailsBlockComponent key={blockKey} block={block} />
             default:
               console.warn(`[BlockRenderer] Unknown block type: ${block.blockType}`, block)
               return null
@@ -83,29 +87,32 @@ function HeroBlock({ block }: { block: any }) {
       return null
     }
 
-    const imageUrl = getImageUrl(block.backgroundImage)
-    const title = block.title || ""
+    // Use CMS image or fallback to default
+    const cmsImageUrl = getImageUrl(block.backgroundImage)
+    const imageUrl = cmsImageUrl || DEFAULT_IMAGES.hero
+    
+    // Use CMS title or null (don't show if empty)
+    const title = block.title || null
+    
     const content = block.content
     const buttonLabel = block.buttonLabel || block.ctaLabel
-    const buttonUrl = block.buttonUrl || block.ctaUrl || "/"
+    const buttonUrl = block.buttonUrl || block.ctaUrl || DEFAULT_CONTENT.hero.buttonUrl
 
     return (
     <section className="relative overflow-hidden min-h-[600px] flex items-center">
-      {imageUrl && (
-        <div className="absolute inset-0">
-          <Image
-            src={imageUrl}
-            alt={title}
-            fill
-            className="object-cover animate-ken-burns"
-            priority
-            fetchPriority="high"
-            sizes="100vw"
-            quality={85}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/80 to-transparent" />
-        </div>
-      )}
+      <div className="absolute inset-0">
+        <Image
+          src={imageUrl}
+          alt={title || "Hero"}
+          fill
+          className="object-cover animate-ken-burns"
+          priority
+          fetchPriority="high"
+          sizes="100vw"
+          quality={85}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/80 to-transparent" />
+      </div>
       <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
         <div className="max-w-2xl text-white animate-fade-in-up">
           {title && (
@@ -144,7 +151,7 @@ function HeroBlock({ block }: { block: any }) {
 /**
  * Extract text content from Lexical editor JSON structure
  */
-function extractTextFromLexical(content: any): string {
+export function extractTextFromLexical(content: any): string {
   if (!content || typeof content !== 'object') {
     return ''
   }
@@ -181,7 +188,7 @@ function extractTextFromLexical(content: any): string {
 /**
  * Render paragraphs from Lexical content
  */
-function renderLexicalContent(content: any) {
+export function renderLexicalContent(content: any) {
   if (!content || typeof content !== 'object') {
     return null
   }
@@ -219,14 +226,30 @@ function ImageTextBlock({ block }: { block: any }) {
       console.error('[ImageTextBlock] Invalid block data:', block)
       return null
     }
-  const imageUrl = getImageUrl(block.image)
-  const title = block.title || ""
-  const content = block.content
-  const imagePosition = block.imagePosition || "left"
-  const buttonLabel = block.buttonLabel
-  const buttonUrl = block.buttonUrl || "/"
+    
+    // Use CMS image or fallback to default
+    const cmsImageUrl = getImageUrl(block.image)
+    const imageUrl = cmsImageUrl || DEFAULT_IMAGES.welcome
+    
+    // Debug logging
+    if (!cmsImageUrl) {
+      console.warn('[ImageTextBlock] No CMS image found, using fallback:', {
+        blockImage: block.image,
+        fallbackUrl: DEFAULT_IMAGES.welcome
+      })
+    }
+    
+    // Use CMS title or null (don't show if empty)
+    const title = block.title || null
+    
+    // Use CMS content or null (don't show if empty)
+    const content = block.content || null
+    
+    const imagePosition = block.imagePosition || "left"
+    const buttonLabel = block.buttonLabel
+    const buttonUrl = block.buttonUrl || "/"
 
-  return (
+    return (
     <section className="py-20 bg-white fade-in-section opacity-0">
       <div className="container mx-auto px-4">
         <div
@@ -234,18 +257,26 @@ function ImageTextBlock({ block }: { block: any }) {
             imagePosition === "right" ? "md:flex-row-reverse" : ""
           }`}
         >
-          {imageUrl && (
-            <div className="relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-xl group">
+          {/* Image container - always render, even if image fails */}
+          <div className="relative h-[400px] md:h-[500px] w-full min-h-[400px] rounded-2xl overflow-hidden shadow-xl group bg-gray-100">
+            {imageUrl ? (
               <Image
                 src={imageUrl}
-                alt={title}
+                alt={title || "Welcome"}
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-700"
                 loading="lazy"
                 sizes="(max-width: 768px) 100vw, 50vw"
+                unoptimized={imageUrl.startsWith('http') && !imageUrl.includes('vercel-storage')}
               />
-            </div>
-          )}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            )}
+          </div>
           <div className="space-y-4">
             {title && (
               <h2 className="text-4xl md:text-5xl font-medium mb-6 text-balance hover:text-primary transition-colors">
@@ -287,47 +318,49 @@ function CardGridBlock({ block }: { block: any }) {
       console.error('[CardGridBlock] Invalid block data:', block)
       return null
     }
-  const title = block.title || ""
-  const content = block.content
-  const cards = block.cards || []
-  const buttonLabel = block.buttonLabel
-  const buttonUrl = block.buttonUrl || "/"
+    
+    // Use CMS title/subtitle or fallback to defaults
+    const title = block.title || DEFAULT_CONTENT.programs.title
+    const subtitle = block.subtitle || DEFAULT_CONTENT.programs.subtitle
+    const content = block.content
+    const cards = block.cards || []
+    const buttonLabel = block.buttonLabel
+    const buttonUrl = block.buttonUrl || "/"
 
-  return (
+    return (
     <section className="py-20 bg-background fade-in-section opacity-0">
       <div className="container mx-auto px-4">
-        {title && (
-          <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance">
-            {title}
-          </h2>
-        )}
-        {subtitle && (
-          <p className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
-            {subtitle}
-          </p>
-        )}
+        <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance">
+          {title}
+        </h2>
+        <p className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
+          {subtitle}
+        </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {cards.map((card: any, index: number) => {
-            const imageUrl = getImageUrl(card.image)
+            // Use CMS image or fallback to default program images
+            const cmsImageUrl = getImageUrl(card.image)
+            const defaultImages = Object.values(DEFAULT_IMAGES.programs)
+            const fallbackImage = defaultImages[index % defaultImages.length] || DEFAULT_IMAGES.programs.artistic
+            const imageUrl = cmsImageUrl || fallbackImage
+            
             return (
               <Card
                 key={card.id || index}
                 className="border-2 hover:border-primary transition-all hover:shadow-2xl hover:-translate-y-2 duration-300 rounded-2xl overflow-hidden group animate-fade-in-up p-0 gap-0"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {imageUrl && (
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={imageUrl}
-                      alt={card.title || ""}
-                      fill
-                      className="object-cover group-hover:scale-125 group-hover:rotate-2 transition-all duration-700"
-                      loading="lazy"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
-                  </div>
-                )}
+                <div className="relative h-48 overflow-hidden">
+                  <Image
+                    src={imageUrl}
+                    alt={card.title || ""}
+                    fill
+                    className="object-cover group-hover:scale-125 group-hover:rotate-2 transition-all duration-700"
+                    loading="lazy"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
+                </div>
                 <CardContent className="p-6">
                   {card.title && (
                     <h3 className="text-2xl font-medium mb-3">{card.title}</h3>
@@ -386,57 +419,30 @@ function ProgramsBlock({ block }: { block: any }) {
       console.error('[ProgramsBlock] Invalid block data:', block)
       return null
     }
-  const title = block.title || ""
-  const content = block.content
-  const programs = block.programs || []
-  const buttonLabel = block.buttonLabel
-  const buttonUrl = block.buttonUrl || "/"
+    
+    const programs = block.programs || []
 
-  return (
-    <section className="py-20 bg-background fade-in-section opacity-0">
-      <div className="container mx-auto px-4">
-        {title && (
-          <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance">
-            {title}
-          </h2>
-        )}
-        {content && (
-          <div className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto prose prose-lg">
-            {renderLexicalContent(content) || (
-              <div className="whitespace-pre-wrap">
-                {extractTextFromLexical(content)}
-              </div>
-            )}
-          </div>
-        )}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+    return (
+      <section className="py-20 bg-background fade-in-section opacity-0">
+        <div className="container mx-auto px-4 max-w-6xl">
           {programs.map((program: any, index: number) => {
             const imageUrl = getImageUrl(program.image)
+            const timetable = program.timetable || {}
+            const schedule = timetable.schedule || []
+            const coach = program.coach || {}
+            const coachPhotoUrl = getImageUrl(coach.photo)
+            
             return (
-              <Card
-                key={program.id || index}
-                className="border-2 hover:border-primary transition-all hover:shadow-2xl hover:-translate-y-2 duration-300 rounded-2xl overflow-hidden group animate-fade-in-up p-0 gap-0"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {imageUrl && (
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={imageUrl}
-                      alt={program.title || ""}
-                      fill
-                      className="object-cover group-hover:scale-125 group-hover:rotate-2 transition-all duration-700"
-                      loading="lazy"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
-                  </div>
-                )}
-                <CardContent className="p-6">
+              <div key={program.id || index} className="mb-20 last:mb-0">
+                {/* Program Header */}
+                <div className="mb-8">
                   {program.title && (
-                    <h3 className="text-2xl font-medium mb-3">{program.title}</h3>
+                    <h2 className="text-4xl md:text-5xl font-medium mb-4 text-balance">
+                      {program.title}
+                    </h2>
                   )}
                   {program.content && (
-                    <div className="text-muted-foreground leading-relaxed mb-4 prose prose-sm">
+                    <div className="text-muted-foreground text-lg leading-relaxed prose prose-lg max-w-none mb-6">
                       {renderLexicalContent(program.content) || (
                         <div className="whitespace-pre-wrap">
                           {extractTextFromLexical(program.content)}
@@ -444,29 +450,98 @@ function ProgramsBlock({ block }: { block: any }) {
                       )}
                     </div>
                   )}
-                  {program.description && (
-                    <p className="text-muted-foreground leading-relaxed mb-4">
-                      {program.description}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Program Image */}
+                {imageUrl && (
+                  <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden mb-8">
+                    <Image
+                      src={imageUrl}
+                      alt={program.title || ""}
+                      fill
+                      className="object-cover"
+                      loading="lazy"
+                      sizes="(max-width: 768px) 100vw, 100vw"
+                    />
+                  </div>
+                )}
+
+                {/* Timetable */}
+                {schedule.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-medium mb-4">
+                      {timetable.title || "Εβδομαδιαίο Πρόγραμμα"}
+                    </h3>
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-primary/10">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Ημέρα</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Ώρα</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Επίπεδο</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {schedule.map((entry: any, idx: number) => (
+                            <tr key={idx} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 text-sm text-gray-900">{entry.day}</td>
+                              <td className="px-6 py-4 text-sm text-gray-900">{entry.time}</td>
+                              <td className="px-6 py-4 text-sm text-gray-900">{entry.level}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Button */}
+                {program.buttonLabel && program.buttonUrl && (
+                  <div className="mb-8">
+                    <Button variant="outline" size="lg" asChild>
+                      <Link href={program.buttonUrl}>{program.buttonLabel}</Link>
+                    </Button>
+                  </div>
+                )}
+
+                {/* Coach Section */}
+                {coach.name && (
+                  <div className="mt-12 pt-8 border-t border-gray-200">
+                    <h3 className="text-2xl font-medium mb-6">
+                      {coach.title || "Προπονητής/τρια"}
+                    </h3>
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                      {coachPhotoUrl && (
+                        <div className="relative w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
+                          <Image
+                            src={coachPhotoUrl}
+                            alt={coach.name}
+                            fill
+                            className="object-cover"
+                            sizes="128px"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h4 className="text-xl font-medium mb-2">{coach.name}</h4>
+                        {coach.bio && (
+                          <div className="text-muted-foreground prose prose-sm max-w-none">
+                            {renderLexicalContent(coach.bio) || (
+                              <div className="whitespace-pre-wrap">
+                                {extractTextFromLexical(coach.bio)}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )
           })}
         </div>
-        {buttonLabel && (
-          <div className="text-center mt-8">
-            <Button
-              variant="outline"
-              size="lg"
-              asChild
-            >
-              <Link href={buttonUrl}>{buttonLabel}</Link>
-            </Button>
-          </div>
-        )}
-      </div>
-    </section>
+      </section>
     )
   } catch (error) {
     console.error('[ProgramsBlock] Error rendering:', error, block)
@@ -480,20 +555,23 @@ function ImageGalleryBlock({ block }: { block: any }) {
       console.error('[ImageGalleryBlock] Invalid block data:', block)
       return null
     }
-  const title = block.title || ""
-  const content = block.content
-  const images = block.images || []
-  const buttonLabel = block.buttonLabel
-  const buttonUrl = block.buttonUrl || "/"
+    
+    // Use CMS title/subtitle or fallback to defaults
+    const title = block.title || DEFAULT_CONTENT.programs.title
+    const subtitle = block.subtitle || DEFAULT_CONTENT.programs.subtitle
+    const content = block.content
+    const images = block.images || []
+    // No buttons for moments/gallery section
 
   return (
     <section className="py-20 bg-white fade-in-section opacity-0">
       <div className="container mx-auto px-4">
-        {title && (
-          <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance leading-relaxed">
-            {title}
-          </h2>
-        )}
+        <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance leading-relaxed">
+          {title}
+        </h2>
+        <p className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
+          {subtitle}
+        </p>
         {content && (
           <div className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto prose prose-lg">
             {renderLexicalContent(content) || (
@@ -538,17 +616,6 @@ function ImageGalleryBlock({ block }: { block: any }) {
             )
           })}
         </div>
-        {buttonLabel && (
-          <div className="text-center mt-8">
-            <Button
-              variant="outline"
-              size="lg"
-              asChild
-            >
-              <Link href={buttonUrl}>{buttonLabel}</Link>
-            </Button>
-          </div>
-        )}
       </div>
     </section>
     )
@@ -564,20 +631,24 @@ function SponsorsBlock({ block }: { block: any }) {
       console.error('[SponsorsBlock] Invalid block data:', block)
       return null
     }
-  const title = block.title || ""
-  const content = block.content
-  const sponsors = block.sponsors || []
-  const buttonLabel = block.buttonLabel
-  const buttonUrl = block.buttonUrl || "/"
+    
+    // Use CMS title/subtitle or fallback to defaults
+    const title = block.title || "Οι Υποστηρικτές μας"
+    const subtitle = block.subtitle || "Ευχαριστούμε θερμά τους υποστηρικτές μας"
+    const content = block.content
+    const sponsors = block.sponsors || []
+    const buttonLabel = block.buttonLabel
+    const buttonUrl = block.buttonUrl || "/"
 
   return (
     <section className="py-20 bg-white fade-in-section opacity-0">
       <div className="container mx-auto px-4">
-        {title && (
-          <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance leading-relaxed">
-            {title}
-          </h2>
-        )}
+        <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance leading-relaxed">
+          {title}
+        </h2>
+        <p className="text-center text-muted-foreground text-lg mb-4">
+          {subtitle}
+        </p>
         {content && (
           <div className="text-center text-muted-foreground text-lg mb-12 prose prose-lg max-w-2xl mx-auto">
             {renderLexicalContent(content) || (
@@ -698,15 +769,10 @@ function CtaBannerBlock({ block }: { block: any }) {
     const content = block.content || block.description
     const buttonLabel = block.buttonLabel
     const buttonUrl = block.buttonUrl || "/"
-    const backgroundGradient = block.backgroundGradient || "purple-orange"
+    // Gradient is always purple-orange (non-editable)
+    const gradientClass = 'bg-gradient-to-r from-purple-600 via-purple-500 to-orange-500'
 
     if (!title) return null
-
-    const gradientClass = backgroundGradient === 'purple-orange' 
-      ? 'gradient-purple-orange' 
-      : backgroundGradient === 'primary-secondary'
-      ? 'bg-gradient-to-r from-primary via-secondary to-accent'
-      : 'bg-gradient-to-r from-accent via-primary to-secondary'
 
     return (
       <section className="py-20 bg-background fade-in-section opacity-0">
