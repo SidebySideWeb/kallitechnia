@@ -44,9 +44,26 @@ export default function AboutPage() {
     async function loadPage() {
       try {
         const pageData = await fetchPage("about")
+        if (pageData) {
+          console.log('[AboutPage] Loaded from CMS:', pageData)
+          console.log('[AboutPage] Blocks:', pageData.blocks)
+          if (pageData.blocks && Array.isArray(pageData.blocks)) {
+            console.log('[AboutPage] Block count:', pageData.blocks.length)
+            pageData.blocks.forEach((block, index) => {
+              console.log(`[AboutPage] Block ${index}:`, {
+                type: block.blockType,
+                hasImage: !!block.image,
+                hasTitle: !!block.title,
+                hasContent: !!block.content
+              })
+            })
+          }
+        } else {
+          console.warn('[AboutPage] No page found in CMS (slug: "about"), using static fallback')
+        }
         setPage(pageData)
       } catch (error) {
-        console.error("Failed to load page:", error)
+        console.error("[AboutPage] Failed to load page:", error)
       } finally {
         setLoading(false)
       }
@@ -78,7 +95,9 @@ export default function AboutPage() {
       <Navigation />
 
       {page?.blocks && Array.isArray(page.blocks) && page.blocks.length > 0 ? (
-        <BlockRenderer blocks={page.blocks} />
+        <>
+          <BlockRenderer blocks={page.blocks} />
+        </>
       ) : (
         <>
           {/* Static content - shown when CMS content is not available or invalid */}
