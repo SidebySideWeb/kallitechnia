@@ -4,10 +4,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, MapPin, Phone, Mail, Clock } from "lucide-react"
-import { getImageUrl } from "@/lib/api"
+import { ArrowRight, Calendar, Sparkles } from "lucide-react"
+import { getImageUrl, fetchLatestPosts, type Post } from "@/lib/api"
 import { DEFAULT_IMAGES, DEFAULT_CONTENT } from "@/lib/defaults"
 import { ContactDetailsBlock as ContactDetailsBlockComponent } from "./ContactDetailsBlock"
+import { useEffect, useState } from "react"
 
 interface BlockRendererProps {
   blocks?: any[]
@@ -56,6 +57,8 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
               return <RichTextBlock key={blockKey} block={block} />
             case "ctaBanner":
               return <CtaBannerBlock key={blockKey} block={block} />
+            case "news":
+              return <NewsBlock key={blockKey} block={block} />
             case "contactDetails":
               return <ContactDetailsBlockComponent key={blockKey} block={block} />
             default:
@@ -63,17 +66,12 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
               return null
           }
         } catch (error) {
-          console.error(`[BlockRenderer] Error rendering block at index ${index}:`, error, block)
-          // Return a placeholder instead of breaking the entire page
-          return (
-            <div key={`error-${index}`} className="container mx-auto px-4 py-8">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 text-sm">
-                  Error rendering block. Please check the CMS content.
-                </p>
-              </div>
-            </div>
+          console.error(
+            `[BlockRenderer] Error rendering block at index ${index}:`,
+            error,
+            block
           )
+          return null
         }
       })}
     </>
@@ -91,12 +89,13 @@ function HeroBlock({ block }: { block: any }) {
     const cmsImageUrl = getImageUrl(block.backgroundImage)
     const imageUrl = cmsImageUrl || DEFAULT_IMAGES.hero
     
-    // Use CMS title or null (don't show if empty)
-    const title = block.title || null
+    // Use CMS title or fallback
+    const title = block.title || DEFAULT_CONTENT.hero.title
+    const subtitle = block.subtitle
     
-    const content = block.content
-    const buttonLabel = block.buttonLabel || block.ctaLabel
-    const buttonUrl = block.buttonUrl || block.ctaUrl || DEFAULT_CONTENT.hero.buttonUrl
+    // Handle CTA group (cta.label, cta.url) or fallback to old format
+    const ctaLabel = block.cta?.label || block.buttonLabel || block.ctaLabel || DEFAULT_CONTENT.hero.buttonLabel
+    const ctaUrl = block.cta?.url || block.buttonUrl || block.ctaUrl || DEFAULT_CONTENT.hero.buttonUrl
 
     return (
     <section className="relative overflow-hidden min-h-[600px] flex items-center">
@@ -120,22 +119,16 @@ function HeroBlock({ block }: { block: any }) {
               {title}
             </h1>
           )}
-          {content && (
-            <div className="text-xl mb-6 prose prose-invert max-w-none">
-              {renderLexicalContent(content) || (
-                <div className="whitespace-pre-wrap">
-                  {extractTextFromLexical(content)}
-                </div>
-              )}
-            </div>
+          {subtitle && (
+            <p className="text-xl mb-6 text-white/90">{subtitle}</p>
           )}
-          {buttonLabel && (
+          {ctaLabel && (
             <Button
               size="lg"
               className="bg-secondary text-white hover:bg-secondary/90 hover:scale-105 transition-all text-lg px-8 shadow-lg"
               asChild
             >
-              <Link href={buttonUrl}>{buttonLabel}</Link>
+              <Link href={ctaUrl}>{ctaLabel}</Link>
             </Button>
           )}
         </div>
@@ -252,11 +245,9 @@ function ImageTextBlock({ block }: { block: any }) {
     return (
     <section className="py-20 bg-white fade-in-section opacity-0">
       <div className="container mx-auto px-4">
-        <div
-          className={`grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto ${
-            imagePosition === "right" ? "md:flex-row-reverse" : ""
-          }`}
-        >
+        <div className={`grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto ${
+          imagePosition === "right" ? "md:flex-row-reverse" : ""
+        }`}>
           {/* Image container - always render, even if image fails */}
           <div className="relative h-[400px] md:h-[500px] w-full min-h-[400px] rounded-2xl overflow-hidden shadow-xl group bg-gray-100">
             {imageUrl ? (
@@ -276,6 +267,7 @@ function ImageTextBlock({ block }: { block: any }) {
                 </svg>
               </div>
             )}
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
           <div className="space-y-4">
             {title && (
@@ -293,11 +285,7 @@ function ImageTextBlock({ block }: { block: any }) {
               </div>
             )}
             {buttonLabel && (
-              <Button
-                variant="outline"
-                className="mt-4"
-                asChild
-              >
+              <Button variant="outline" asChild>
                 <Link href={buttonUrl}>{buttonLabel}</Link>
               </Button>
             )}
@@ -322,10 +310,7 @@ function CardGridBlock({ block }: { block: any }) {
     // Use CMS title/subtitle or fallback to defaults
     const title = block.title || DEFAULT_CONTENT.programs.title
     const subtitle = block.subtitle || DEFAULT_CONTENT.programs.subtitle
-    const content = block.content
     const cards = block.cards || []
-    const buttonLabel = block.buttonLabel
-    const buttonUrl = block.buttonUrl || "/"
 
     return (
     <section className="py-20 bg-background fade-in-section opacity-0">
@@ -365,27 +350,20 @@ function CardGridBlock({ block }: { block: any }) {
                   {card.title && (
                     <h3 className="text-2xl font-medium mb-3">{card.title}</h3>
                   )}
-                  {card.content && (
-                    <div className="text-muted-foreground leading-relaxed mb-4 prose prose-sm">
-                      {renderLexicalContent(card.content) || (
-                        <div className="whitespace-pre-wrap">
-                          {extractTextFromLexical(card.content)}
-                        </div>
-                      )}
-                    </div>
-                  )}
                   {card.description && (
                     <p className="text-muted-foreground leading-relaxed mb-4">
                       {card.description}
                     </p>
                   )}
-                  {card.buttonLabel && card.buttonUrl && (
+                  {(card.cta?.label || card.buttonLabel) && (card.cta?.url || card.buttonUrl) && (
                     <Button
                       variant="outline"
                       className="w-full bg-transparent hover:bg-primary hover:text-white transition-all"
                       asChild
                     >
-                      <Link href={card.buttonUrl}>{card.buttonLabel}</Link>
+                      <Link href={card.cta?.url || card.buttonUrl || "#"}>
+                        {card.cta?.label || card.buttonLabel || "Μάθετε περισσότερα"}
+                      </Link>
                     </Button>
                   )}
                 </CardContent>
@@ -393,17 +371,6 @@ function CardGridBlock({ block }: { block: any }) {
             )
           })}
         </div>
-        {buttonLabel && (
-          <div className="text-center mt-8">
-            <Button
-              variant="outline"
-              size="lg"
-              asChild
-            >
-              <Link href={buttonUrl}>{buttonLabel}</Link>
-            </Button>
-          </div>
-        )}
       </div>
     </section>
     )
@@ -419,127 +386,120 @@ function ProgramsBlock({ block }: { block: any }) {
       console.error('[ProgramsBlock] Invalid block data:', block)
       return null
     }
-    
+
+    const title = block.title || "Τα Τμήματά μας"
+    const subtitle = block.subtitle
     const programs = block.programs || []
 
     return (
       <section className="py-20 bg-background fade-in-section opacity-0">
-        <div className="container mx-auto px-4 max-w-6xl">
-          {programs.map((program: any, index: number) => {
-            const imageUrl = getImageUrl(program.image)
-            const timetable = program.timetable || {}
-            const schedule = timetable.schedule || []
-            const coach = program.coach || {}
-            const coachPhotoUrl = getImageUrl(coach.photo)
-            
-            return (
-              <div key={program.id || index} className="mb-20 last:mb-0">
-                {/* Program Header */}
-                <div className="mb-8">
-                  {program.title && (
-                    <h2 className="text-4xl md:text-5xl font-medium mb-4 text-balance">
-                      {program.title}
-                    </h2>
-                  )}
-                  {program.content && (
-                    <div className="text-muted-foreground text-lg leading-relaxed prose prose-lg max-w-none mb-6">
-                      {renderLexicalContent(program.content) || (
-                        <div className="whitespace-pre-wrap">
-                          {extractTextFromLexical(program.content)}
+        <div className="container mx-auto px-4">
+          {title && (
+            <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance">
+              {title}
+            </h2>
+          )}
+          {subtitle && (
+            <p className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
+              {subtitle}
+            </p>
+          )}
+          <div className="space-y-16">
+            {programs.map((program: any, index: number) => {
+              const programImageUrl = getImageUrl(program.image)
+              const coachPhotoUrl = getImageUrl(program.coach?.photo)
+              const coach = program.coach || {}
+
+              return (
+                <div key={program.id || index} className="max-w-4xl mx-auto">
+                  <div className="grid md:grid-cols-2 gap-8 items-center">
+                    {programImageUrl && (
+                      <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden shadow-xl group">
+                        <Image
+                          src={programImageUrl}
+                          alt={program.title || "Program"}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          loading="lazy"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      {program.title && (
+                        <h3 className="text-3xl font-medium mb-4">{program.title}</h3>
+                      )}
+                      {program.content && (
+                        <div className="text-muted-foreground leading-relaxed mb-6 prose prose-sm max-w-none">
+                          {renderLexicalContent(program.content) || (
+                            <div className="whitespace-pre-wrap">
+                              {extractTextFromLexical(program.content)}
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  )}
-                </div>
 
-                {/* Program Image */}
-                {imageUrl && (
-                  <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden mb-8">
-                    <Image
-                      src={imageUrl}
-                      alt={program.title || ""}
-                      fill
-                      className="object-cover"
-                      loading="lazy"
-                      sizes="(max-width: 768px) 100vw, 100vw"
-                    />
-                  </div>
-                )}
-
-                {/* Timetable */}
-                {schedule.length > 0 && (
-                  <div className="mb-8">
-                    <h3 className="text-2xl font-medium mb-4">
-                      {timetable.title || "Εβδομαδιαίο Πρόγραμμα"}
-                    </h3>
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                      <table className="w-full">
-                        <thead className="bg-primary/10">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Ημέρα</th>
-                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Ώρα</th>
-                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Επίπεδο</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {schedule.map((entry: any, idx: number) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 text-sm text-gray-900">{entry.day}</td>
-                              <td className="px-6 py-4 text-sm text-gray-900">{entry.time}</td>
-                              <td className="px-6 py-4 text-sm text-gray-900">{entry.level}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Button */}
-                {program.buttonLabel && program.buttonUrl && (
-                  <div className="mb-8">
-                    <Button variant="outline" size="lg" asChild>
-                      <Link href={program.buttonUrl}>{program.buttonLabel}</Link>
-                    </Button>
-                  </div>
-                )}
-
-                {/* Coach Section */}
-                {coach.name && (
-                  <div className="mt-12 pt-8 border-t border-gray-200">
-                    <h3 className="text-2xl font-medium mb-6">
-                      {coach.title || "Προπονητής/τρια"}
-                    </h3>
-                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                      {coachPhotoUrl && (
-                        <div className="relative w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
-                          <Image
-                            src={coachPhotoUrl}
-                            alt={coach.name}
-                            fill
-                            className="object-cover"
-                            sizes="128px"
-                          />
+                      {/* Timetable */}
+                      {program.timetable && program.timetable.length > 0 && (
+                        <div className="mb-6">
+                          <h4 className="text-lg font-medium mb-3">Πρόγραμμα:</h4>
+                          <ul className="space-y-2">
+                            {program.timetable.map((schedule: any, sIndex: number) => (
+                              <li key={sIndex} className="text-muted-foreground">
+                                <span className="font-medium">{schedule.day}</span>: {schedule.time} ({schedule.level})
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
-                      <div className="flex-1">
-                        <h4 className="text-xl font-medium mb-2">{coach.name}</h4>
-                        {coach.bio && (
-                          <div className="text-muted-foreground prose prose-sm max-w-none">
-                            {renderLexicalContent(coach.bio) || (
-                              <div className="whitespace-pre-wrap">
-                                {extractTextFromLexical(coach.bio)}
+
+                      {program.buttonLabel && program.buttonUrl && (
+                        <div className="mb-8">
+                          <Button variant="outline" size="lg" asChild>
+                            <Link href={program.buttonUrl}>{program.buttonLabel}</Link>
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Coach Section */}
+                      {coach.name && (
+                        <div className="mt-12 pt-8 border-t border-gray-200">
+                          <h3 className="text-2xl font-medium mb-6">
+                            {coach.title || "Προπονητής/τρια"}
+                          </h3>
+                          <div className="flex flex-col md:flex-row gap-6 items-start">
+                            {coachPhotoUrl && (
+                              <div className="relative w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={coachPhotoUrl}
+                                  alt={coach.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="128px"
+                                />
                               </div>
                             )}
+                            <div className="flex-1">
+                              <h4 className="text-xl font-medium mb-2">{coach.name}</h4>
+                              {coach.bio && (
+                                <div className="text-muted-foreground prose prose-sm max-w-none">
+                                  {renderLexicalContent(coach.bio) || (
+                                    <div className="whitespace-pre-wrap">
+                                      {extractTextFromLexical(coach.bio)}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            )
-          })}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </section>
     )
@@ -557,11 +517,9 @@ function ImageGalleryBlock({ block }: { block: any }) {
     }
     
     // Use CMS title/subtitle or fallback to defaults
-    const title = block.title || DEFAULT_CONTENT.programs.title
-    const subtitle = block.subtitle || DEFAULT_CONTENT.programs.subtitle
-    const content = block.content
+    const title = block.title || DEFAULT_CONTENT.moments.title
+    const subtitle = block.subtitle || DEFAULT_CONTENT.moments.subtitle
     const images = block.images || []
-    // No buttons for moments/gallery section
 
   return (
     <section className="py-20 bg-white fade-in-section opacity-0">
@@ -572,15 +530,6 @@ function ImageGalleryBlock({ block }: { block: any }) {
         <p className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto">
           {subtitle}
         </p>
-        {content && (
-          <div className="text-center text-muted-foreground text-lg mb-12 max-w-2xl mx-auto prose prose-lg">
-            {renderLexicalContent(content) || (
-              <div className="whitespace-pre-wrap">
-                {extractTextFromLexical(content)}
-              </div>
-            )}
-          </div>
-        )}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {images.map((image: any, index: number) => {
             const imageUrl = getImageUrl(image.image)
@@ -592,13 +541,13 @@ function ImageGalleryBlock({ block }: { block: any }) {
               >
                 <Image
                   src={imageUrl}
-                  alt={image.caption || title}
+                  alt={image.title || image.subtitle || title}
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-700"
                   loading="lazy"
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
-                {(image.title || image.caption) && (
+                {(image.title || image.subtitle) && (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                     <div className="absolute bottom-6 left-6 text-white">
                       {image.title && (
@@ -606,8 +555,8 @@ function ImageGalleryBlock({ block }: { block: any }) {
                           {image.title}
                         </h3>
                       )}
-                      {image.caption && (
-                        <p className="text-sm">{image.caption}</p>
+                      {image.subtitle && (
+                        <p className="text-sm">{image.subtitle}</p>
                       )}
                     </div>
                   </div>
@@ -635,10 +584,7 @@ function SponsorsBlock({ block }: { block: any }) {
     // Use CMS title/subtitle or fallback to defaults
     const title = block.title || "Οι Υποστηρικτές μας"
     const subtitle = block.subtitle || "Ευχαριστούμε θερμά τους υποστηρικτές μας"
-    const content = block.content
     const sponsors = block.sponsors || []
-    const buttonLabel = block.buttonLabel
-    const buttonUrl = block.buttonUrl || "/"
 
   return (
     <section className="py-20 bg-white fade-in-section opacity-0">
@@ -646,22 +592,12 @@ function SponsorsBlock({ block }: { block: any }) {
         <h2 className="text-4xl md:text-5xl font-medium text-center mb-4 text-balance leading-relaxed">
           {title}
         </h2>
-        <p className="text-center text-muted-foreground text-lg mb-4">
+        <p className="text-center text-muted-foreground text-lg mb-12">
           {subtitle}
         </p>
-        {content && (
-          <div className="text-center text-muted-foreground text-lg mb-12 prose prose-lg max-w-2xl mx-auto">
-            {renderLexicalContent(content) || (
-              <div className="whitespace-pre-wrap">
-                {extractTextFromLexical(content)}
-              </div>
-            )}
-          </div>
-        )}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center max-w-5xl mx-auto">
           {sponsors.map((sponsor: any, index: number) => {
             const logoUrl = getImageUrl(sponsor.image || sponsor.logo)
-            const sponsorName = sponsor.title || sponsor.name
             const sponsorUrl = sponsor.url
             
             return (
@@ -674,7 +610,7 @@ function SponsorsBlock({ block }: { block: any }) {
                     <Link href={sponsorUrl} target="_blank" rel="noopener noreferrer" className="w-full h-full flex items-center justify-center">
                       <Image
                         src={logoUrl}
-                        alt={sponsorName || "Sponsor"}
+                        alt={`Sponsor ${index + 1}`}
                         width={120}
                         height={80}
                         className="object-contain"
@@ -683,7 +619,7 @@ function SponsorsBlock({ block }: { block: any }) {
                   ) : (
                     <Image
                       src={logoUrl}
-                      alt={sponsorName || "Sponsor"}
+                      alt={`Sponsor ${index + 1}`}
                       width={120}
                       height={80}
                       className="object-contain"
@@ -691,8 +627,9 @@ function SponsorsBlock({ block }: { block: any }) {
                   )
                 ) : (
                   <div className="text-center">
+                    <Sparkles className="h-12 w-12 text-primary mx-auto mb-2 animate-pulse" />
                     <p className="text-sm font-semibold text-muted-foreground">
-                      {sponsorName || `Sponsor ${index + 1}`}
+                      Sponsor {index + 1}
                     </p>
                   </div>
                 )}
@@ -700,17 +637,6 @@ function SponsorsBlock({ block }: { block: any }) {
             )
           })}
         </div>
-        {buttonLabel && (
-          <div className="text-center mt-8">
-            <Button
-              variant="outline"
-              size="lg"
-              asChild
-            >
-              <Link href={buttonUrl}>{buttonLabel}</Link>
-            </Button>
-          </div>
-        )}
       </div>
     </section>
     )
@@ -766,9 +692,11 @@ function CtaBannerBlock({ block }: { block: any }) {
     }
 
     const title = block.title || ""
-    const content = block.content || block.description
-    const buttonLabel = block.buttonLabel
-    const buttonUrl = block.buttonUrl || "/"
+    const subtitle = block.subtitle
+    // Handle CTA group (cta.label, cta.url) or fallback to old format
+    const ctaLabel = block.cta?.label || block.buttonLabel
+    const ctaUrl = block.cta?.url || block.buttonUrl || "/"
+    
     // Gradient is always purple-orange (non-editable)
     const gradientClass = 'bg-gradient-to-r from-purple-600 via-purple-500 to-orange-500'
 
@@ -786,26 +714,24 @@ function CtaBannerBlock({ block }: { block: any }) {
               />
             </div>
             <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl font-medium mb-6 text-balance animate-fade-in-up leading-relaxed">
-                {title}
-              </h2>
-              {content && (
-                <div className="text-xl mb-8 max-w-2xl mx-auto leading-relaxed prose prose-invert">
-                  {renderLexicalContent(content) || (
-                    <div className="whitespace-pre-wrap">
-                      {extractTextFromLexical(content)}
-                    </div>
-                  )}
-                </div>
+              {title && (
+                <h2 className="text-4xl md:text-5xl font-medium mb-6 text-balance animate-fade-in-up leading-relaxed">
+                  {title}
+                </h2>
               )}
-              {buttonLabel && (
+              {subtitle && (
+                <p className="text-xl mb-8 max-w-2xl mx-auto leading-relaxed">
+                  {subtitle}
+                </p>
+              )}
+              {ctaLabel && (
                 <Button
                   size="lg"
                   className="bg-white text-primary hover:bg-white/90 hover:scale-110 transition-all duration-300 text-lg px-8 shadow-2xl"
                   asChild
                 >
-                  <Link href={buttonUrl} className="flex items-center gap-2">
-                    {buttonLabel}
+                  <Link href={ctaUrl} className="flex items-center gap-2">
+                    {ctaLabel}
                     <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
@@ -821,3 +747,142 @@ function CtaBannerBlock({ block }: { block: any }) {
   }
 }
 
+function NewsBlock({ block }: { block: any }) {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadPosts() {
+      try {
+        const count = block.latestCount || 3
+        const latestPosts = await fetchLatestPosts(count)
+        setPosts(latestPosts)
+      } catch (error) {
+        console.error('[NewsBlock] Failed to load posts:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadPosts()
+  }, [block.latestCount])
+
+  try {
+    if (!block || typeof block !== 'object') {
+      console.error('[NewsBlock] Invalid block data:', block)
+      return null
+    }
+
+    const title = block.title || DEFAULT_CONTENT.news.title
+    const subtitle = block.subtitle || DEFAULT_CONTENT.news.subtitle
+
+    return (
+      <section className="py-20 bg-background fade-in-section opacity-0">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-medium mb-2 text-balance">
+                {title}
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                {subtitle}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              asChild
+              className="hidden md:flex bg-transparent hover:scale-105 transition-transform"
+            >
+              <Link href="/news">
+                Όλα τα Νέα
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+          {loading ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="rounded-2xl overflow-hidden p-0 gap-0 animate-pulse">
+                  <div className="relative h-56 bg-muted" />
+                  <CardContent className="p-6">
+                    <div className="h-4 bg-muted rounded mb-3 w-32" />
+                    <div className="h-6 bg-muted rounded mb-3 w-full" />
+                    <div className="h-4 bg-muted rounded mb-2 w-full" />
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : posts.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              {posts.map((post) => {
+                const imageUrl = getImageUrl(post.featuredImage)
+                const publishedDate = post.publishedAt
+                  ? new Date(post.publishedAt).toLocaleDateString("el-GR", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : ""
+
+                return (
+                  <Card
+                    key={post.id}
+                    className="rounded-2xl overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 p-0 gap-0"
+                  >
+                    {imageUrl && (
+                      <div className="relative h-56 overflow-hidden group">
+                        <Image
+                          src={imageUrl}
+                          alt={post.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                      </div>
+                    )}
+                    <CardContent className="p-6">
+                      {publishedDate && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                          <Calendar className="h-4 w-4" />
+                          <span>{publishedDate}</span>
+                        </div>
+                      )}
+                      <h3 className="text-xl font-medium mb-3 hover:text-primary transition-colors">
+                        {post.title}
+                      </h3>
+                      {post.excerpt && (
+                        <p className="text-muted-foreground leading-relaxed mb-4">{post.excerpt}</p>
+                      )}
+                      <Button variant="link" className="p-0 hover:translate-x-2 transition-transform" asChild>
+                        <Link href={`/news/${post.slug}`}>
+                          Διαβάστε περισσότερα
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Δεν υπάρχουν διαθέσιμα νέα αυτή τη στιγμή.</p>
+            </div>
+          )}
+          <div className="text-center mt-8 md:hidden">
+            <Button variant="outline" asChild>
+              <Link href="/news">
+                Όλα τα Νέα
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    )
+  } catch (error) {
+    console.error('[NewsBlock] Error rendering:', error, block)
+    return null
+  }
+}
