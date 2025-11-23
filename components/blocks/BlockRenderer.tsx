@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Calendar, Sparkles } from "lucide-react"
 import { getImageUrl, fetchLatestPosts, type Post } from "@/lib/api"
 import { DEFAULT_IMAGES, DEFAULT_CONTENT } from "@/lib/defaults"
-import { ContactDetailsBlock as ContactDetailsBlockComponent } from "./ContactDetailsBlock"
 import { useEffect, useState } from "react"
 
 interface BlockRendererProps {
