@@ -273,15 +273,20 @@ function ImageTextBlock({ block }: { block: any }) {
                 {title}
               </h2>
             )}
-            {content && (
-              <div className="text-lg leading-relaxed text-muted-foreground prose prose-lg max-w-none mb-4">
-                {renderLexicalContent(content) || (
-                  <div className="whitespace-pre-wrap">
-                    {extractTextFromLexical(content)}
-                  </div>
-                )}
-              </div>
-            )}
+            {content && (() => {
+              const renderedContent = renderLexicalContent(content)
+              const textContent = extractTextFromLexical(content)
+              if (!renderedContent && !textContent) return null
+              return (
+                <div className="text-lg leading-relaxed text-muted-foreground prose prose-lg max-w-none mb-4">
+                  {renderedContent || (
+                    <div className="whitespace-pre-wrap">
+                      {textContent}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
             {buttonLabel && (
               <Button variant="outline" asChild>
                 <Link href={buttonUrl}>{buttonLabel}</Link>
@@ -427,15 +432,20 @@ function ProgramsBlock({ block }: { block: any }) {
                       {program.title && (
                         <h3 className="text-3xl font-medium mb-4">{program.title}</h3>
                       )}
-                      {program.content && (
-                        <div className="text-muted-foreground leading-relaxed mb-6 prose prose-sm max-w-none">
-                          {renderLexicalContent(program.content) || (
-                            <div className="whitespace-pre-wrap">
-                              {extractTextFromLexical(program.content)}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {program.content && (() => {
+                        const renderedContent = renderLexicalContent(program.content)
+                        const textContent = extractTextFromLexical(program.content)
+                        if (!renderedContent && !textContent) return null
+                        return (
+                          <div className="text-muted-foreground leading-relaxed mb-6 prose prose-sm max-w-none">
+                            {renderedContent || (
+                              <div className="whitespace-pre-wrap">
+                                {textContent}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()}
 
                       {/* Timetable */}
                       {program.timetable && program.timetable.length > 0 && (
