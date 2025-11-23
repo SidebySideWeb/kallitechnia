@@ -59,8 +59,6 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
               return <CtaBannerBlock key={blockKey} block={block} />
             case "news":
               return <NewsBlock key={blockKey} block={block} />
-            case "contactDetails":
-              return <ContactDetailsBlockComponent key={blockKey} block={block} />
             default:
               console.warn(`[BlockRenderer] Unknown block type: ${block.blockType}`, block)
               return null
