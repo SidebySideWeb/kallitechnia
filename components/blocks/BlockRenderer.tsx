@@ -678,11 +678,18 @@ function RichTextBlock({ block }: { block: any }) {
       <section className="py-20 bg-white fade-in-section opacity-0">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="prose prose-lg max-w-none">
-            {renderLexicalContent(content) || (
-              <div className="text-lg leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                {textContent}
-              </div>
-            )}
+            {(() => {
+              const renderedContent = renderLexicalContent(content)
+              if (renderedContent) return renderedContent
+              if (textContent) {
+                return (
+                  <div className="text-lg leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                    {textContent}
+                  </div>
+                )
+              }
+              return null
+            })()}
           </div>
         </div>
       </section>
