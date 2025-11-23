@@ -272,7 +272,8 @@ function ImageTextBlock({ block }: { block: any }) {
                 {title}
               </h2>
             )}
-            {content && (() => {
+            {(() => {
+              if (!content) return null
               const renderedContent = renderLexicalContent(content)
               const textContent = extractTextFromLexical(content)
               if (!renderedContent && !textContent) return null
@@ -431,7 +432,8 @@ function ProgramsBlock({ block }: { block: any }) {
                       {program.title && (
                         <h3 className="text-3xl font-medium mb-4">{program.title}</h3>
                       )}
-                      {program.content && (() => {
+                      {(() => {
+                        if (!program.content) return null
                         const renderedContent = renderLexicalContent(program.content)
                         const textContent = extractTextFromLexical(program.content)
                         if (!renderedContent && !textContent) return null
